@@ -33,4 +33,7 @@ jobs:
           GIT_AUTHOR_EMAIL: action@github.com
           GIT_COMMITTER_NAME: GitHub Action
           GIT_COMMITTER_EMAIL: action@github.com
-        run: npm run deploy
+        run: |
+          npm run build
+          touch dist/.nojekyll
+          npm run deploy
