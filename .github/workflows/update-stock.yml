@@ -69,29 +69,4 @@ jobs:
               "base": "main"
             }'
       
-      - name: Copiar archivos a gh-pages
-        if: steps.verify-changes.outputs.has_changes == 'true'
-        run: |
-          cp public/stock_data.json /tmp/stock_data.json
-          cp public/productos_local.json /tmp/productos_local.json
-          
-          cleanup() {
-            local exit_code=$?
-            echo "Volviendo a main..."
-            if ! git checkout main 2>/dev/null; then
-              git checkout -b main origin/main 2>/dev/null || echo "No se pudo volver a main"
-            fi
-            return $exit_code
-          }
-          trap cleanup EXIT
-          
-          git reset --hard
-          git fetch origin gh-pages
-          git checkout gh-pages
-          
-          cp /tmp/stock_data.json stock_data.json
-          cp /tmp/productos_local.json productos_local.json
-          
-          git add stock_data.json productos_local.json 404.html
-          git commit -m "Sync: Actualizar stock - $(date +'%Y-%m-%d %H:%M')" || echo "No hay cambios"
-          git push origin gh-pages
+      # Step removed - gh-pages is now managed by deploy-frontend workflow only
