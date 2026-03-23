@@ -2,32 +2,46 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="refresh" content="0;url=index.html">
-  <title>Redirecting...</title>
-  <script>
-    // Redirigir todas las rutas a index.html para que React Router las maneje
-    (function() {
-      var path = window.location.pathname;
-      var search = window.location.search || '';
-      var hash = window.location.hash || '';
-      
-      // Si ya es index.html o la raíz, no hacer nada
-      if (path === '/index.html' || path === '/Hoja_Pedido_/index.html' || path === '/') {
-        return;
+  <title>CIPSA OrderX - Redirecting...</title>
+  <script type="text/javascript">
+    // Single Page Apps for GitHub Pages
+    // MIT License
+    // https://github.com/rafgraph/spa-github-pages
+    // This script checks to see if a redirect is present in the query string,
+    // converts it back into the correct url and adds it to the
+    // browser's history using window.history.replaceState(...),
+    // which causes the browser to stay on the current page without refreshing.
+    (function(l) {
+      if (l.search[1] === '/' ) {
+        var decoded = l.search.slice(1).split('&').map(function(s) { 
+          return s.replace(/~and~/g, '&')
+        }).join('?');
+        window.history.replaceState(null, null,
+            l.pathname.slice(0, -1) + decoded + l.hash
+        );
       }
-      
-      // Redirigir a la ruta base con los parámetros y hash
-      window.location.href = '/Hoja_Pedido_/index.html' + search + hash;
-    })();
+    }(window.location))
   </script>
-  <style>
-    body { font-family: system-ui, sans-serif; padding: 20px; text-align: center; }
-  </style>
+  <script type="text/javascript">
+    // This script takes the current url and converts the path and query
+    // string into just a query string, and then redirects the browser
+    // to the new url with only a query string and hash fragment,
+    // e.g. http://www.foo.tld/one/two?a=b#anchor becomes
+    // http://www.foo.tld/?/one/two&a=b#anchor
+    // Note: this 404.html file must be at least 512 bytes for it to be used
+    // by IE and Chrome (https://support.microsoft.com/en-us/kb/295064).
+    var pathSegmentsToKeep = 1;
+
+    var l = window.location;
+    l.replace(
+      l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+      l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
+      l.pathname.split('/').slice(1 + pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
+      (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+      l.hash
+    );
+  </script>
 </head>
 <body>
-  <p>Redirecting to app...</p>
-  <noscript>
-    <p>If you are not redirected, <a href="/Hoja_Pedido_/index.html">click here</a>.</p>
-  </noscript>
 </body>
 </html>
