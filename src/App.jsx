@@ -8,7 +8,7 @@ import { G360_CONFIG } from './core/g360-skill.js';
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AppProvider>
         <Routes>
           <Route path="/" element={<Layout />}>

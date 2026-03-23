@@ -5,8 +5,8 @@ import path from 'path'
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => ({
   plugins: [react()],
-  // Si estamos en build (producción para GH Pages), usar la subruta. En dev, usar la raíz.
-  base: '/',
+  // Use repository name for production, root for development
+  base: command === 'build' ? '/g360-order-form/' : '/',
   resolve: {
     alias: {
       '@assets': path.resolve(__dirname, './g360-assets'),
