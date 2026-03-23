@@ -4,8 +4,8 @@ node_modules/
 # Build output
 dist/
 
-# Generated assets from dev/build - don't commit to main
-/assets/
+# Generated assets from dev/build - don't commit
+assets/
 
 # Environment files
 .env
