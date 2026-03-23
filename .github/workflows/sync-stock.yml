@@ -1,0 +1,27 @@
+name: G360 OrderX - Sync Stock & Deploy
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 */6 * * *'  # Cada 6 horas
+  workflow_dispatch:  # Ejecución manual
+
+jobs:
+  sync-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      # Build and deploy removed - now handled by deploy-frontend workflow
+      # The stock data will be updated in the main branch
