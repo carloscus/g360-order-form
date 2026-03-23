@@ -6,10 +6,10 @@ import path from 'path'
 export default defineConfig(({ command }) => ({
   plugins: [react()],
   // Si estamos en build (producción para GH Pages), usar la subruta. En dev, usar la raíz.
-  base: command === 'serve' ? '/' : '/Hoja_Pedido_/',
+  base: '/',
   resolve: {
     alias: {
-      '@assets': path.resolve(__dirname, '../../g360-assets'),
+      '@assets': path.resolve(__dirname, './g360-assets'),
     }
   },
   build: {
@@ -24,7 +24,7 @@ export default defineConfig(({ command }) => ({
     fs: {
       allow: [
         '.',
-        '../../g360-assets'
+        './g360-assets'
       ]
     }
   }
