@@ -3,7 +3,7 @@
  * Sistema de gestión de pedidos usando skill unificado 'client' (Mobile)
  */
 
-import { getClientSkill } from '../../../../g360-assets/engine/g360-skill-client.js';
+import { getClientSkill } from '@assets/engine/g360-skill-client.js';
 
 const baseClientSkill = getClientSkill('mobile');
 
