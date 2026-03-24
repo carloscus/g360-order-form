@@ -2,6 +2,8 @@ name: Actualizar Stock desde Appweb
 
 on:
   schedule:
+    # Ejecutar cada hora de 7 AM a 11 PM (hora Lima = UTC-5)
+    # 7 AM Lima = 12:00 UTC, 11 PM Lima = 04:00 UTC siguiente día
     - cron: '0 12-23 * * *'
     - cron: '0 0-4 * * *'
   workflow_dispatch:
