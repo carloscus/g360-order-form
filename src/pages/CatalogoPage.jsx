@@ -20,8 +20,9 @@ const CATEGORIES = [
 const PRODUCTS_PER_PAGE = 24;
 
 function CatalogoPage() {
-  const { addToCart } = useApp();
+  const { addToCart, lastStockUpdate } = useApp();
   const [productos, setProductos] = useState([]);
+  const [stockData, setStockData] = useState({});
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -30,9 +31,32 @@ function CatalogoPage() {
   const [searchQuantities, setSearchQuantities] = useState({});
   const debouncedSearch = useDebounce(search, 300);
 
+  // Cargar stock desde localStorage
+  const loadStockFromStorage = useCallback(() => {
+    try {
+      const stored = localStorage.getItem('hoja_pedido_stock');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.stockData && Array.isArray(parsed.stockData)) {
+          const stockObj = {};
+          parsed.stockData.forEach(item => {
+            stockObj[item.sku] = item.disponible;
+          });
+          setStockData(stockObj);
+        }
+      }
+    } catch (e) {
+      console.warn('Error loading stock from storage:', e);
+    }
+  }, []);
+
+  // Cargar datos iniciales (catálogo + stock)
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
+      // Cargar stock primero
+      loadStockFromStorage();
+      
       const response = await fetch(`${getBaseUrl()}catalogo_completo.json?t=${Date.now()}`);
       const data = await response.json();
       setProductos(data.productos.map((p, index) => ({
@@ -44,7 +68,7 @@ function CatalogoPage() {
         ean: p.ean13 || '',
         ean14: '',
         linea: p.linea?.toUpperCase().trim() || '',
-        stock: 999, // Stock por defecto ya que no está en catalogo_completo
+        // Stock se obtiene del stockData cargado
         orden: p.orden || index + 1,
         isNew: index < 20,
         isTrending: index % 15 === 0,
@@ -55,9 +79,26 @@ function CatalogoPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadStockFromStorage]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // Actualizar stock cuando cambia el evento de stock-updated
+  useEffect(() => {
+    if (lastStockUpdate?.stockData) {
+      const stockObj = {};
+      lastStockUpdate.stockData.forEach(item => {
+        stockObj[item.sku] = item.disponible;
+      });
+      setStockData(stockObj);
+    }
+  }, [lastStockUpdate]);
+
+  // Función para obtener stock de un producto
+  const getProductStock = (sku) => {
+    const stock = stockData[sku];
+    return stock !== undefined ? stock : 999; // Por defecto 999 si no hay stock
+  };
 
   const filteredProducts = useMemo(() => {
     let result = productos;
@@ -151,100 +192,103 @@ function CatalogoPage() {
           Array(8).fill(0).map((_, i) => (
             <div key={i} className="h-56 bg-[var(--g360-surface)] rounded-[2rem] animate-pulse" />
           ))
-        ) : pagedItems.map(p => (
-          <div key={p.codigo} className={`g360-card relative flex flex-col p-3 hover:border-[var(--g360-accent)]/40 ${p.esRemate ? 'ring-2 ring-yellow-500/50 bg-yellow-500/5' : ''}`}>
-            
-            {/* Badge REMATE */}
-            {p.esRemate && (
-              <div className="absolute -top-1 -right-1 z-10">
-                <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-2 py-1 rounded-bl-xl rounded-tr-xl flex items-center gap-1 shadow-lg">
-                  <span className="text-sm">🏷️</span>
-                  <span className="text-xs font-black uppercase tracking-wider">OFERTA</span>
+        ) : pagedItems.map(p => {
+          const productStock = getProductStock(p.codigo);
+          return (
+            <div key={p.codigo} className={`g360-card relative flex flex-col p-3 hover:border-[var(--g360-accent)]/40 ${p.esRemate ? 'ring-2 ring-yellow-500/50 bg-yellow-500/5' : ''}`}>
+              
+              {/* Badge REMATE */}
+              {p.esRemate && (
+                <div className="absolute -top-1 -right-1 z-10">
+                  <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-2 py-1 rounded-bl-xl rounded-tr-xl flex items-center gap-1 shadow-lg">
+                    <span className="text-sm">🏷️</span>
+                    <span className="text-xs font-black uppercase tracking-wider">OFERTA</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Header SKU */}
+              <div className="flex flex-col mb-3">
+                <div className="flex justify-between items-start">
+                  <span className={`text-lg sm:text-xl font-mono font-black tracking-tighter ${p.esRemate ? 'text-yellow-500' : 'text-[var(--g360-accent)]'}`}>
+                    {p.codigo}
+                  </span>
+                  <span className="text-xs font-black text-[var(--g360-muted)] uppercase tracking-widest">{p.linea}</span>
+                </div>
+                <span className="text-xs font-bold text-[var(--g360-muted)] mt-1 uppercase opacity-60">EAN: {p.ean || p.ean14 || '---'}</span>
+              </div>
+
+              {/* Product Name */}
+              <h3 className="text-sm sm:text-base font-bold text-[var(--g360-text)] line-clamp-2 leading-tight min-h-[2.4rem] mb-3 tracking-tight group-hover:text-[var(--g360-accent)] transition-colors">
+                {p.nombre}
+              </h3>
+
+              {/* Combined Info Section: Stock + Box + Price */}
+              <div className="bg-[var(--g360-input-bg)]/50 rounded-2xl p-3 border border-[var(--g360-border)] mb-3">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-2 h-2 rounded-full ${productStock < 20 ? 'bg-red-500 animate-pulse' : 'bg-[var(--g360-accent)]'}`}></div>
+                    <span className="text-xs font-black text-[var(--g360-muted)] uppercase">Stock: {productStock}</span>
+                  </div>
+                  <span className="px-2 py-0.5 bg-[var(--g360-surface)] rounded text-xs font-black text-[var(--g360-muted)] border border-[var(--g360-border)]">Box: {p.bxSize}U</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-[var(--g360-muted)] font-bold uppercase tracking-widest">Precio Neto</span>
+                  <span className="text-2xl sm:text-3xl font-black text-[var(--g360-text)] tracking-tighter">{formatMoney(p.precioLista)}</span>
                 </div>
               </div>
-            )}
-            
-            {/* Header SKU */}
-            <div className="flex flex-col mb-3">
-              <div className="flex justify-between items-start">
-                <span className={`text-lg sm:text-xl font-mono font-black tracking-tighter ${p.esRemate ? 'text-yellow-500' : 'text-[var(--g360-accent)]'}`}>
-                  {p.codigo}
-                </span>
-                <span className="text-xs font-black text-[var(--g360-muted)] uppercase tracking-widest">{p.linea}</span>
-              </div>
-              <span className="text-xs font-bold text-[var(--g360-muted)] mt-1 uppercase opacity-60">EAN: {p.ean || p.ean14 || '---'}</span>
-            </div>
 
-            {/* Product Name */}
-            <h3 className="text-sm sm:text-base font-bold text-[var(--g360-text)] line-clamp-2 leading-tight min-h-[2.4rem] mb-3 tracking-tight group-hover:text-[var(--g360-accent)] transition-colors">
-              {p.nombre}
-            </h3>
-
-            {/* Combined Info Section: Stock + Box + Price */}
-            <div className="bg-[var(--g360-input-bg)]/50 rounded-2xl p-3 border border-[var(--g360-border)] mb-3">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-1.5">
-                  <div className={`w-2 h-2 rounded-full ${p.stock < 20 ? 'bg-red-500 animate-pulse' : 'bg-[var(--g360-accent)]'}`}></div>
-                  <span className="text-xs font-black text-[var(--g360-muted)] uppercase">Stock: {p.stock}</span>
-                </div>
-                <span className="px-2 py-0.5 bg-[var(--g360-surface)] rounded text-xs font-black text-[var(--g360-muted)] border border-[var(--g360-border)]">Box: {p.bxSize}U</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-[var(--g360-muted)] font-bold uppercase tracking-widest">Precio Neto</span>
-                <span className="text-2xl sm:text-3xl font-black text-[var(--g360-text)] tracking-tighter">{formatMoney(p.precioLista)}</span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="mt-auto space-y-2">
-              <div className="flex gap-2">
-                <div className="flex-1 h-10 flex items-center bg-[var(--g360-input-bg)] rounded-xl p-1 border border-[var(--g360-border)]">
-                  <button 
-                    onClick={() => setSearchQuantities(v => ({...v, [p.codigo]: Math.max(0, (v[p.codigo] || 0) - 1)}))}
-                    className="w-8 h-8 flex items-center justify-center text-[var(--g360-muted)] hover:text-[var(--g360-accent)]"
+              {/* Actions */}
+              <div className="mt-auto space-y-2">
+                <div className="flex gap-2">
+                  <div className="flex-1 h-10 flex items-center bg-[var(--g360-input-bg)] rounded-xl p-1 border border-[var(--g360-border)]">
+                    <button 
+                      onClick={() => setSearchQuantities(v => ({...v, [p.codigo]: Math.max(0, (v[p.codigo] || 0) - 1)}))}
+                      className="w-8 h-8 flex items-center justify-center text-[var(--g360-muted)] hover:text-[var(--g360-accent)]"
+                    >
+                      <span className="material-symbols-outlined text-xl">remove</span>
+                    </button>
+                    <input
+                      type="number"
+                      className="w-full text-center bg-transparent border-none text-sm font-black p-0 focus:ring-0 text-[var(--g360-text)]"
+                      value={searchQuantities[p.codigo] || 0}
+                      onChange={e => setSearchQuantities(v => ({...v, [p.codigo]: parseInt(e.target.value) || 0}))}
+                    />
+                    <button 
+                      onClick={() => setSearchQuantities(v => ({...v, [p.codigo]: (v[p.codigo] || 0) + 1}))}
+                      className="w-8 h-8 flex items-center justify-center text-[var(--g360-muted)] hover:text-[var(--g360-accent)]"
+                    >
+                      <span className="material-symbols-outlined text-xl">add</span>
+                    </button>
+                  </div>
+                  
+                  <button
+                    onClick={() => setSearchQuantities(v => ({...v, [p.codigo]: (v[p.codigo] || 0) + p.bxSize}))}
+                    className="w-10 h-10 bg-[var(--g360-accent)]/10 text-[var(--g360-accent)] rounded-xl flex flex-col items-center justify-center border border-[var(--g360-accent)]/30 hover:bg-[var(--g360-accent)] hover:text-black transition-all"
                   >
-                    <span className="material-symbols-outlined text-xl">remove</span>
-                  </button>
-                  <input
-                    type="number"
-                    className="w-full text-center bg-transparent border-none text-sm font-black p-0 focus:ring-0 text-[var(--g360-text)]"
-                    value={searchQuantities[p.codigo] || 0}
-                    onChange={e => setSearchQuantities(v => ({...v, [p.codigo]: parseInt(e.target.value) || 0}))}
-                  />
-                  <button 
-                    onClick={() => setSearchQuantities(v => ({...v, [p.codigo]: (v[p.codigo] || 0) + 1}))}
-                    className="w-8 h-8 flex items-center justify-center text-[var(--g360-muted)] hover:text-[var(--g360-accent)]"
-                  >
-                    <span className="material-symbols-outlined text-xl">add</span>
+                    <span className="text-xs font-black uppercase leading-none">+1</span>
+                    <span className="text-[11px] font-black uppercase leading-none">Box</span>
                   </button>
                 </div>
-                
+
                 <button
-                  onClick={() => setSearchQuantities(v => ({...v, [p.codigo]: (v[p.codigo] || 0) + p.bxSize}))}
-                  className="w-10 h-10 bg-[var(--g360-accent)]/10 text-[var(--g360-accent)] rounded-xl flex flex-col items-center justify-center border border-[var(--g360-accent)]/30 hover:bg-[var(--g360-accent)] hover:text-black transition-all"
+                  onClick={() => {
+                    const q = searchQuantities[p.codigo] || 0;
+                    if(q > 0) {
+                      addToCart(p, q);
+                      setSearchQuantities(v => ({...v, [p.codigo]: 0}));
+                    }
+                  }}
+                  disabled={!(searchQuantities[p.codigo] > 0)}
+                  className="w-full h-10 bg-[var(--g360-accent)] text-black rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-[var(--g360-accent)]/20 disabled:opacity-20 disabled:grayscale hover:bg-[var(--g360-accent)] transition-all active:scale-95"
                 >
-                  <span className="text-xs font-black uppercase leading-none">+1</span>
-                  <span className="text-[11px] font-black uppercase leading-none">Box</span>
+                  <span className="material-symbols-outlined text-xl font-bold">add_shopping_cart</span>
+                  <span className="text-[11px] font-black uppercase tracking-widest">Añadir</span>
                 </button>
               </div>
-
-              <button
-                onClick={() => {
-                  const q = searchQuantities[p.codigo] || 0;
-                  if(q > 0) {
-                    addToCart(p, q);
-                    setSearchQuantities(v => ({...v, [p.codigo]: 0}));
-                  }
-                }}
-                disabled={!(searchQuantities[p.codigo] > 0)}
-                className="w-full h-10 bg-[var(--g360-accent)] text-black rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-[var(--g360-accent)]/20 disabled:opacity-20 disabled:grayscale hover:bg-[var(--g360-accent)] transition-all active:scale-95"
-              >
-                <span className="material-symbols-outlined text-xl font-bold">add_shopping_cart</span>
-                <span className="text-[11px] font-black uppercase tracking-widest">Añadir</span>
-              </button>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Pagination */}
@@ -267,7 +311,7 @@ function CatalogoPage() {
             onClick={() => { setCurrentPage(v => v + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
             className="w-14 h-14 rounded-full border border-[var(--g360-border)] flex items-center justify-center hover:bg-[var(--g360-surface)] text-[var(--g360-muted)] disabled:opacity-20 transition-all"
            >
-              <span className="material-symbols-outlined text-2xl">east</span>
+               <span className="material-symbols-outlined text-2xl">east</span>
            </button>
         </div>
       )}
