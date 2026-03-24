@@ -5,18 +5,20 @@
  */
 
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useRef, useEffect, useState, useCallback } from 'react';
-import { useApp } from '../context/AppContext';
-import { loadExcelFile } from '../utils/xlsxLoader';
-import { getBaseUrl } from '../utils/baseUrl';
-import { G360_CONFIG } from '../core/g360-skill';
+  import { useRef, useEffect, useState, useCallback } from 'react';
+  import { useApp } from '../context/AppContext';
+  import { loadExcelFile } from '../utils/xlsxLoader';
+  import { getBaseUrl } from '../utils/baseUrl';
+  import { G360_CONFIG } from '../core/g360-skill';
+  import ClientDataModal from '../components/ClientDataModal';
+  import G360DragModal from '@assets/engine/components/G360DragModal';
 
 // Componente de Modal de Confirmación Moderno - Symmetric
 function ConfirmModal({ isOpen, title, message, confirmText = 'Confirmar', cancelText = 'Cancelar', onConfirm, onCancel, danger = false }) {
   if (!isOpen) return null;
   
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onCancel} />
       <div className="relative bg-[var(--g360-surface)] rounded-[2rem] shadow-2xl max-w-sm w-full p-8 animate-scale-in border border-[var(--g360-border)] text-center">
         <h3 className="text-xl font-black text-[var(--g360-text)] mb-2 uppercase tracking-tighter">{title}</h3>
@@ -39,7 +41,7 @@ function AlertModal({ isOpen, title, message, buttonText = 'Aceptar', onClose, t
   if (!isOpen) return null;
   
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
       <div className="relative bg-[var(--g360-surface)] rounded-[2rem] shadow-2xl max-w-sm w-full p-8 animate-scale-in border border-[var(--g360-border)] text-center">
         <div className="flex flex-col items-center gap-4 mb-6">
@@ -71,7 +73,7 @@ function CatalogosModal({ isOpen, onClose }) {
   if (!isOpen) return null;
   
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       <div className="fixed inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
       <div className="relative bg-[var(--g360-surface)] rounded-[2rem] shadow-2xl max-w-md w-full p-8 animate-scale-in border border-[var(--g360-border)]">
         <div className="flex items-center justify-between mb-6">
@@ -96,7 +98,7 @@ function CatalogosModal({ isOpen, onClose }) {
             </div>
             <div className="flex-1 text-left">
               <div className="text-sm font-bold text-[var(--g360-text)]">Flip Book Interactivo</div>
-              <div className="text-[10px] text-[var(--g360-muted)]">Explora nuestros catálogos en línea</div>
+              <div className="text-xs text-[var(--g360-muted)]">Explora nuestros catálogos en línea</div>
             </div>
             <span className="material-symbols-outlined text-[var(--g360-muted)]">open_in_new</span>
           </button>
@@ -120,7 +122,7 @@ function CatalogosModal({ isOpen, onClose }) {
                 </div>
                 <div className="flex-1 text-left">
                   <div className="text-sm font-bold text-[var(--g360-text)]">{cat.nombre}</div>
-                  <div className="text-[10px] text-[var(--g360-muted)]">{cat.subtitulo}</div>
+                  <div className="text-xs text-[var(--g360-muted)]">{cat.subtitulo}</div>
                 </div>
                 <span className="material-symbols-outlined text-[var(--g360-muted)]">download</span>
               </button>
@@ -133,7 +135,7 @@ function CatalogosModal({ isOpen, onClose }) {
 }
 
 function Layout() {
-  const { cartCount, setShowPedidoModal, clearCart, isDarkMode, toggleTheme } = useApp();
+  const { cartCount, setShowPedidoModal, clearCart, isDarkMode, toggleTheme, floatingPosition, updateFloatingPosition } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -153,6 +155,21 @@ function Layout() {
   };
 
   const performRefresh = async () => {
+    // Verificar última actualización
+    const lastSync = localStorage.getItem('hoja_pedido_stock_sync');
+    if (lastSync) {
+      const lastSyncTime = new Date(lastSync);
+      const now = new Date();
+      const minutesSinceLastSync = (now - lastSyncTime) / (1000 * 60);
+
+      // Si la última sincronización fue hace menos de 5 minutos, mostrar info
+      if (minutesSinceLastSync < 5) {
+        const timeAgo = Math.floor(minutesSinceLastSync);
+        showAlert('Info', `Datos actualizados hace ${timeAgo} minutos.`, 'info');
+        return;
+      }
+    }
+
     setIsRefreshing(true);
     try {
       const stockResponse = await fetch(`${getBaseUrl()}stock_data.json?t=${Date.now()}`);
@@ -211,7 +228,7 @@ function Layout() {
               <h1 className="text-lg sm:text-2xl font-black font-premium leading-tight tracking-tighter uppercase italic text-[var(--g360-text)]">
                 CIPSA <span className="text-[var(--g360-accent)]">OrderX</span>
               </h1>
-              <span className="text-[10px] uppercase font-black text-[var(--g360-muted)] tracking-[0.15em] leading-none">
+              <span className="text-xs uppercase font-black text-[var(--g360-muted)] tracking-[0.15em] leading-none">
                 Gestión de Pedidos
               </span>
             </div>
@@ -228,40 +245,33 @@ function Layout() {
       <div className="flex pt-16">
         {/* Desktop Sidebar */}
         <aside className="hidden lg:flex flex-col w-64 h-[calc(100vh-80px)] sticky top-20 ml-8 bg-[var(--g360-surface)] rounded-[2.5rem] border border-[var(--g360-border)] p-6 gap-6 shadow-xl z-40">
-          <div className="flex flex-col gap-2">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--g360-muted)] px-4 mb-2">Navegación</span>
-            <NavLink to="/catalogo" className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive ? 'bg-[var(--g360-accent)] text-black shadow-lg shadow-[var(--g360-glow)]' : 'text-[var(--g360-text)] hover:bg-[var(--g360-input-bg)]'}`}>
-              <span className="material-symbols-outlined">home</span>
-              <span className="text-sm font-bold uppercase tracking-widest">Inicio</span>
-            </NavLink>
-            <NavLink to="/orden" className={({isActive}) => `flex items-center justify-between px-4 py-3 rounded-2xl transition-all ${isActive ? 'bg-[var(--g360-accent)] text-black shadow-lg shadow-[var(--g360-glow)]' : 'text-[var(--g360-muted)] hover:bg-[var(--g360-input-bg)]'}`}>
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined">shopping_bag</span>
-                <span className="text-sm font-bold uppercase tracking-widest">Mi Orden</span>
-              </div>
-              {cartCount > 0 && (
-                <span className={`w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-black ${isPathActive('/orden') ? 'bg-black text-[var(--g360-accent)]' : 'bg-red-500 text-white'}`}>
-                  {cartCount}
-                </span>
-              )}
-            </NavLink>
-          </div>
+           <div className="flex flex-col gap-2">
+             <span className="text-xs font-black uppercase tracking-[0.2em] text-[var(--g360-muted)] px-4 mb-2">Navegación</span>
+             <NavLink to="/catalogo" className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive ? 'bg-[var(--g360-accent)] text-black shadow-lg shadow-[var(--g360-glow)]' : 'text-[var(--g360-text)] hover:bg-[var(--g360-input-bg)]'}`}>
+               <span className="material-symbols-outlined">home</span>
+               <span className="text-sm font-bold uppercase tracking-widest">Inicio</span>
+             </NavLink>
+             <button onClick={() => setShowCatalogosModal(true)} className="flex items-center gap-3 px-4 py-3 rounded-2xl text-[var(--g360-text)] hover:bg-[var(--g360-input-bg)] transition-all text-left">
+               <span className="material-symbols-outlined">menu_book</span>
+               <span className="text-sm font-bold uppercase tracking-widest">Catálogos</span>
+             </button>
+             <button onClick={() => setShowPedidoModal(true)} className="flex items-center gap-3 px-4 py-3 rounded-2xl text-[var(--g360-text)] hover:bg-[var(--g360-input-bg)] transition-all text-left">
+               <span className="material-symbols-outlined text-rose-500">person</span>
+               <span className="text-sm font-bold uppercase tracking-widest">Cliente</span>
+             </button>
+           </div>
 
-          <div className="flex flex-col gap-2">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--g360-muted)] px-4 mb-2">Herramientas</span>
-            <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-3 px-4 py-3 rounded-2xl text-[var(--g360-muted)] hover:bg-[var(--g360-input-bg)] transition-all text-left">
-              <span className="material-symbols-outlined">upload_file</span>
-              <span className="text-sm font-bold uppercase tracking-widest">Cargar XLSX</span>
-            </button>
-            <button onClick={performRefresh} disabled={isRefreshing} className="flex items-center gap-3 px-4 py-3 rounded-2xl text-[var(--g360-muted)] hover:bg-[var(--g360-input-bg)] transition-all text-left">
-              <span className={`material-symbols-outlined ${isRefreshing ? 'animate-spin' : ''}`}>sync</span>
-              <span className="text-sm font-bold uppercase tracking-widest">{isRefreshing ? 'Actualizando...' : 'Sincronizar'}</span>
-            </button>
-            <button onClick={() => setShowCatalogosModal(true)} className="flex items-center gap-3 px-4 py-3 rounded-2xl text-[var(--g360-muted)] hover:bg-[var(--g360-input-bg)] transition-all text-left">
-              <span className="material-symbols-outlined">menu_book</span>
-              <span className="text-sm font-bold uppercase tracking-widest">Catálogos</span>
-            </button>
-          </div>
+           <div className="flex flex-col gap-2">
+             <span className="text-xs font-black uppercase tracking-[0.2em] text-[var(--g360-muted)] px-4 mb-2">Herramientas</span>
+              <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-3 px-4 py-3 rounded-2xl text-[var(--g360-muted)] hover:bg-[var(--g360-input-bg)] transition-all text-left">
+                <span className="material-symbols-outlined">upload</span>
+                <span className="text-sm font-bold uppercase tracking-widest">Importar</span>
+              </button>
+              <button onClick={performRefresh} disabled={isRefreshing} className="flex items-center gap-3 px-4 py-3 rounded-2xl text-[var(--g360-muted)] hover:bg-[var(--g360-input-bg)] transition-all text-left">
+                <span className={`material-symbols-outlined ${isRefreshing ? 'animate-spin' : ''}`}>sync</span>
+                <span className="text-sm font-bold uppercase tracking-widest">{isRefreshing ? 'Actualizando...' : 'Actualizar'}</span>
+              </button>
+           </div>
         </aside>
 
         <main className="flex-1 lg:pt-4 pb-16 lg:pb-12 px-4 lg:px-8 max-w-full overflow-hidden">
@@ -269,37 +279,56 @@ function Layout() {
         </main>
       </div>
 
-      {/* Mobile Nav - FIXED DESIGN */}
-      <nav className="mobile-nav lg:hidden">
-        <NavLink to="/catalogo" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
-          <span className="material-symbols-outlined">home</span>
-          <span>Inicio</span>
-        </NavLink>
-        <button onClick={() => setShowCatalogosModal(true)} className="nav-item">
-          <span className="material-symbols-outlined">menu_book</span>
-          <span>Catálogos</span>
-        </button>
-        <button onClick={() => fileInputRef.current?.click()} className="nav-item">
-          <span className="material-symbols-outlined">upload_file</span>
-          <span>Cargar</span>
-        </button>
-        <input ref={fileInputRef} type="file" accept=".xlsx,.xls" onChange={handleLoadXLSX} className="hidden" />
-        <button onClick={performRefresh} disabled={isRefreshing} className="nav-item">
-          <span className={`material-symbols-outlined ${isRefreshing ? 'animate-spin' : ''}`}>sync</span>
-          <span>Sincro</span>
-        </button>
-        <NavLink to="/orden" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
-          <div className="relative">
-              <span className="material-symbols-outlined">shopping_bag</span>
-              {cartCount > 0 && (
-                <span className={`absolute -top-1.5 -right-2 w-4 h-4 text-[8px] flex items-center justify-center rounded-full font-black border border-[var(--g360-bg)] ${isPathActive('/orden') ? 'bg-black text-[var(--g360-accent)]' : 'bg-red-500 text-white'}`}>
-                  {cartCount}
-                </span>
-              )}
-          </div>
-          <span>Orden</span>
-        </NavLink>
-      </nav>
+       {/* Mobile Nav - 5 BOTONES PRINCIPALES */}
+       <nav className="mobile-nav lg:hidden">
+         <NavLink to="/catalogo" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+           <span className="material-symbols-outlined">home</span>
+           <span>Inicio</span>
+         </NavLink>
+         <button onClick={() => setShowCatalogosModal(true)} className="nav-item">
+           <span className="material-symbols-outlined">menu_book</span>
+           <span>Catálogos</span>
+         </button>
+         <button onClick={() => setShowPedidoModal(true)} className="nav-item">
+           <span className="material-symbols-outlined text-rose-500">person</span>
+           <span>Cliente</span>
+         </button>
+          <button onClick={() => fileInputRef.current?.click()} className="nav-item">
+            <span className="material-symbols-outlined">upload</span>
+            <span>Importar</span>
+          </button>
+          <input ref={fileInputRef} type="file" accept=".xlsx,.xls" onChange={handleLoadXLSX} className="hidden" />
+
+          <button onClick={performRefresh} disabled={isRefreshing} className="nav-item">
+            <span className={`material-symbols-outlined ${isRefreshing ? 'animate-spin' : ''}`}>sync</span>
+            <span>Actualizar</span>
+          </button>
+       </nav>
+
+       {/* Floating Cart Button - SOLO EN CATALOGO */}
+       {cartCount > 0 && location.pathname === '/catalogo' && (
+         <G360DragModal
+           isOpen={true}
+           lockInterface={false}
+           showBackdrop={false}
+           className="flex items-center gap-3 bg-[var(--g360-surface)]/60 backdrop-blur-sm p-2.5 pl-4 rounded-full border-2 border-[var(--g360-accent)]/40 shadow-[0_4px_16px_rgba(0,0,0,0.1)] hover:scale-105 transition-all opacity-90 hover:opacity-100"
+           position={floatingPosition ? null : "center"}
+           initialPosition={floatingPosition}
+           onPositionChange={updateFloatingPosition}
+           zIndex={10000}
+         >
+           <div className="flex flex-col">
+             <span className="text-xs font-black text-[var(--g360-accent)] uppercase leading-none tracking-wider">Mi Pedido</span>
+             <span className="text-xs font-bold text-[var(--g360-text)]">{cartCount} Items</span>
+           </div>
+           <button
+             onClick={() => navigate('/orden')}
+             className="w-10 h-10 bg-[var(--g360-accent)] text-black rounded-full flex items-center justify-center shadow-md shadow-[var(--g360-glow)] hover:bg-[var(--g360-accent)] hover:scale-110 transition-all border border-[var(--g360-accent)]"
+           >
+             <span className="material-symbols-outlined text-lg">shopping_bag</span>
+           </button>
+         </G360DragModal>
+       )}
 
       {/* MODALS */}
       <ConfirmModal
@@ -328,6 +357,8 @@ function Layout() {
         isOpen={showCatalogosModal}
         onClose={() => setShowCatalogosModal(false)}
       />
+
+      <ClientDataModal zIndex={10000} />
 
     </div>
   );

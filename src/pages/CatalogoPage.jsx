@@ -107,7 +107,7 @@ function CatalogoPage() {
           <h2 className="text-3xl font-black font-premium uppercase tracking-tighter text-[var(--g360-text)]">
             {currentCategory.label}
           </h2>
-          <p className="text-[10px] text-[var(--g360-accent)] font-black uppercase tracking-[0.2em] mt-1">
+          <p className="text-xs text-[var(--g360-accent)] font-black uppercase tracking-[0.2em] mt-1">
             {filteredProducts.length} PRODUCTOS DISPONIBLES
           </p>
         </div>
@@ -120,7 +120,7 @@ function CatalogoPage() {
               <button
                 key={cat.id}
                 onClick={() => { setActiveCatalog(cat.id); setCurrentPage(1); }}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl whitespace-nowrap text-[9px] font-black uppercase tracking-widest transition-all lg:px-6 lg:py-3 lg:text-[10px] lg:gap-2 lg:rounded-2xl ${
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl whitespace-nowrap text-[11px] font-black uppercase tracking-widest transition-all lg:px-6 lg:py-3 lg:text-[12px] lg:gap-2 lg:rounded-2xl ${
                   activeCatalog === cat.id
                   ? 'bg-[var(--g360-accent)] text-black shadow-xl shadow-[var(--g360-accent)]/20'
                   : 'bg-[var(--g360-surface)] text-[var(--g360-muted)] border border-[var(--g360-border)]'
@@ -159,7 +159,7 @@ function CatalogoPage() {
               <div className="absolute -top-1 -right-1 z-10">
                 <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-2 py-1 rounded-bl-xl rounded-tr-xl flex items-center gap-1 shadow-lg">
                   <span className="text-sm">🏷️</span>
-                  <span className="text-[8px] font-black uppercase tracking-wider">OFERTA</span>
+                  <span className="text-xs font-black uppercase tracking-wider">OFERTA</span>
                 </div>
               </div>
             )}
@@ -170,9 +170,9 @@ function CatalogoPage() {
                 <span className={`text-lg sm:text-xl font-mono font-black tracking-tighter ${p.esRemate ? 'text-yellow-500' : 'text-[var(--g360-accent)]'}`}>
                   {p.codigo}
                 </span>
-                <span className="text-[10px] font-black text-[var(--g360-muted)] uppercase tracking-widest">{p.linea}</span>
+                <span className="text-xs font-black text-[var(--g360-muted)] uppercase tracking-widest">{p.linea}</span>
               </div>
-              <span className="text-[10px] font-bold text-[var(--g360-muted)] mt-1 uppercase opacity-60">EAN: {p.ean || p.ean14 || '---'}</span>
+              <span className="text-xs font-bold text-[var(--g360-muted)] mt-1 uppercase opacity-60">EAN: {p.ean || p.ean14 || '---'}</span>
             </div>
 
             {/* Product Name */}
@@ -185,12 +185,12 @@ function CatalogoPage() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-1.5">
                   <div className={`w-2 h-2 rounded-full ${p.stock < 20 ? 'bg-red-500 animate-pulse' : 'bg-[var(--g360-accent)]'}`}></div>
-                  <span className="text-[10px] font-black text-[var(--g360-muted)] uppercase">Stock: {p.stock}</span>
+                  <span className="text-xs font-black text-[var(--g360-muted)] uppercase">Stock: {p.stock}</span>
                 </div>
-                <span className="px-2 py-0.5 bg-[var(--g360-surface)] rounded text-[10px] font-black text-[var(--g360-muted)] border border-[var(--g360-border)]">Box: {p.bxSize}U</span>
+                <span className="px-2 py-0.5 bg-[var(--g360-surface)] rounded text-xs font-black text-[var(--g360-muted)] border border-[var(--g360-border)]">Box: {p.bxSize}U</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-[10px] text-[var(--g360-muted)] font-bold uppercase tracking-widest">Precio Neto</span>
+                <span className="text-xs text-[var(--g360-muted)] font-bold uppercase tracking-widest">Precio Neto</span>
                 <span className="text-2xl sm:text-3xl font-black text-[var(--g360-text)] tracking-tighter">{formatMoney(p.precioLista)}</span>
               </div>
             </div>
@@ -223,8 +223,8 @@ function CatalogoPage() {
                   onClick={() => setSearchQuantities(v => ({...v, [p.codigo]: (v[p.codigo] || 0) + p.bxSize}))}
                   className="w-10 h-10 bg-[var(--g360-accent)]/10 text-[var(--g360-accent)] rounded-xl flex flex-col items-center justify-center border border-[var(--g360-accent)]/30 hover:bg-[var(--g360-accent)] hover:text-black transition-all"
                 >
-                  <span className="text-[7px] font-black uppercase leading-none">+1</span>
-                  <span className="text-[9px] font-black uppercase leading-none">Box</span>
+                  <span className="text-xs font-black uppercase leading-none">+1</span>
+                  <span className="text-[11px] font-black uppercase leading-none">Box</span>
                 </button>
               </div>
 
@@ -240,7 +240,7 @@ function CatalogoPage() {
                 className="w-full h-10 bg-[var(--g360-accent)] text-black rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-[var(--g360-accent)]/20 disabled:opacity-20 disabled:grayscale hover:bg-[var(--g360-accent)] transition-all active:scale-95"
               >
                 <span className="material-symbols-outlined text-xl font-bold">add_shopping_cart</span>
-                <span className="text-[10px] font-black uppercase tracking-widest">Añadir</span>
+                <span className="text-[11px] font-black uppercase tracking-widest">Añadir</span>
               </button>
             </div>
           </div>

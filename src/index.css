@@ -94,6 +94,10 @@
     @apply rounded-xl transition-all;
   }
 
+  .input-minimal {
+    @apply w-full bg-[var(--g360-input-bg)] border border-[var(--g360-border)] rounded-2xl px-5 py-4 text-sm font-bold text-[var(--g360-text)] focus:border-[var(--g360-accent)] outline-none transition-all;
+  }
+
   /* Search Overlay - Fixed Dark Layer Issue */
   .search-overlay {
     @apply fixed inset-0 z-30 bg-black/60 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-500;

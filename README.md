@@ -1,12 +1,13 @@
-# 📋 CIPSA Order Form v1.3.0
+# 📋 CIPSA OrderX v2.0
 
 Sistema de gestión de hojas de pedido para fuerza de ventas en el ecosistema G360. Optimizado para móvil y desktop con navegación tipo app, sincronización de stock y catálogo de productos.
 
-![Versión](https://img.shields.io/badge/version-1.3.0-blue)
+![Versión](https://img.shields.io/badge/version-2.0-blue)
 ![React](https://img.shields.io/badge/React-18-61DAFB)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF)
 ![Tailwind](https://img.shields.io/badge/Tailwind-3-38B2AC)
 ![G360](https://img.shields.io/badge/G360-Ecosystem-0d9488)
+![G360 Skill](https://img.shields.io/badge/G360-Skill-22c55e)
 ![Status](https://img.shields.io/badge/status-production-green)
 
 ---
@@ -45,6 +46,37 @@ Sigue las convenciones definidas en `g360-assets/GLOSARIO_COMPONENTES.md`:
 - Componentes: PascalCase (ej: `ClientDataModal`)
 - Clases CSS: Kebab-case (ej: `data-card`)
 - Props: camelCase (ej: `onChange`)
+
+### ⚙️ G360 Skill System
+El proyecto utiliza el **G360 Skill System** para configuración unificada del cliente:
+
+```javascript
+// src/core/g360-skill.js
+import { getClientSkill } from '@assets/engine/g360-skill-client.js';
+
+const baseClientSkill = getClientSkill('mobile');
+
+export const G360_CONFIG = {
+  ...baseClientSkill,
+  branding: {
+    clientName: 'CIPSA',
+    appTitle: 'CIPSA OrderX v2.0',
+    clientLogoFile: './logo-cipsa.svg',
+    clientFavicon: './favicon.svg'
+  }
+};
+```
+
+**Características del Skill System:**
+- Configuración centralizada de branding (logo, favicon, nombre)
+- Soporte multi-plataforma (mobile, desktop)
+- Herencia de configuración base del ecosistema G360
+- Inyección automática en `window.G360_CONFIG`
+
+**Archivos relacionados:**
+- `src/core/g360-skill.js` - Configuración del skill para CIPSA
+- `g360-assets/engine/g360-skill-client.js` - Skill base del ecosistema
+- `g360-assets/engine/g360-theme.css` - Estilos del tema G360
 
 ---
 
@@ -101,50 +133,70 @@ g360-order-form/
 │
 ├── 📁 .github/
 │   └── 📁 workflows/
-│       └── 📄 update-stock.yml  # GitHub Actions para stock
+│       ├── 📄 update-stock.yml  # GitHub Actions para stock
+│       └── 📄 sync-stock.yml    # GitHub Actions para sincronización
+│
+├── 📁 g360-assets/              # Assets del ecosistema G360
+│   └── 📁 engine/
+│       ├── 📄 g360-skill-client.js  # Skill base del ecosistema
+│       ├── 📄 g360-theme.css        # Estilos del tema G360
+│       └── 📁 components/
+│           └── 📄 G360DragModal.jsx # Modal arrastrable G360
 │
 ├── 📁 public/                    # Archivos estáticos
 │   ├── 📄 productos_local.json  # Catálogo de productos
 │   ├── 📄 stock_data.json       # Datos de stock (generado)
-│   └── 📄 favicon.svg          # Icono de la app
+│   ├── 📄 catalogo_completo.json # Catálogo completo
+│   ├── 📄 favicon.svg           # Icono de la app
+│   ├── 📄 logo-cipsa.svg        # Logo de CIPSA
+│   └── 📄 404.html              # Página 404 para GitHub Pages
 │
 ├── 📁 scripts/
-│   └── 📄 download-stock.js     # Script de sincronización
+│   ├── 📄 download-stock.js     # Script de sincronización
+│   ├── 📄 setup-branch-protection.js  # Configurar protección de ramas
+│   └── 📄 setup-gh-pages-protection.js # Configurar protección gh-pages
 │
 ├── 📁 stock-api/                 # API local opcional
 │   ├── 📄 server.js
 │   └── 📄 package.json
 │
 ├── 📁 docs/
-│   └── 📄 MANUAL_USUARIO.md     # Manual de usuario
+│   ├── 📄 MANUAL_USUARIO.md     # Manual de usuario
+│   └── 📄 PROTEGER_REPO.md      # Guía de protección del repo
 │
-└── � src/                       # Código fuente
+└── 📁 src/                       # Código fuente
     ├── 📄 main.jsx              # Punto de entrada React
-    ├── 📄 App.jsx              # Componente principal + Rutas
-    ├── 📄 index.css            # Estilos globales + CSS variables
+    ├── 📄 App.jsx               # Componente principal + Rutas
+    ├── 📄 index.css             # Estilos globales + CSS variables
     │
-    ├── 📁 components/          # Componentes reutilizables
+    ├── 📁 core/                 # Configuración G360
+    │   └── 📄 g360-skill.js     # Skill configurado para CIPSA
+    │
+    ├── 📁 components/           # Componentes reutilizables
     │   ├── 📄 ClientDataModal.jsx  # Modal datos del cliente
-    │   └── 📄 Tooltip.jsx      # Tooltip informativo
+    │   ├── 📄 DocumentInput.jsx # Input de documentos
+    │   └── 📄 Tooltip.jsx       # Tooltip informativo
     │
-    ├── 📁 context/             # Estado global
-    │   └── 📄 AppContext.jsx   # Context API (carrito, tema, cliente)
+    ├── 📁 context/              # Estado global
+    │   └── 📄 AppContext.jsx    # Context API (carrito, tema, cliente)
     │
-    ├── 📁 pages/               # Páginas principales
-    │   ├── 📄 Layout.jsx       # Layout con navegación
-    │   ├── 📄 CatalogoPage.jsx # Catálogo y búsqueda
-    │   └── 📄 OrdenPage.jsx    # Resumen y exportación
+    ├── 📁 pages/                # Páginas principales
+    │   ├── 📄 Layout.jsx        # Layout con navegación
+    │   ├── 📄 CatalogoPage.jsx  # Catálogo y búsqueda
+    │   └── 📄 OrdenPage.jsx     # Resumen y exportación
     │
     ├── 📁 hooks/
-    │   └── 📄 useDebounce.js   # Hook de debounce
+    │   └── 📄 useDebounce.js    # Hook de debounce
     │
     ├── 📁 services/
-    │   └── 📄 stockService.js  # Servicios de stock
+    │   └── 📄 stockService.js   # Servicios de stock
     │
     └── 📁 utils/
-        ├── 📄 formatters.js    # Formateadores de datos
-        ├── 📄 xlsxGenerator.js # Generador de Excel
-        └── 📄 xlsxLoader.js    # Loader de archivos XLSX
+        ├── 📄 formatters.js     # Formateadores de datos
+        ├── 📄 xlsxGenerator.js  # Generador de Excel
+        ├── 📄 xlsxLoader.js     # Loader de archivos XLSX
+        ├── 📄 xlsxShare.js      # Utilidades para compartir
+        └── 📄 baseUrl.js        # Configuración de URL base
 ```
 
 ---
@@ -381,6 +433,8 @@ AppContext
 - **Tailwind CSS 3** - Framework CSS utilitario
 - **XLSX (SheetJS)** - Generación y parsing de archivos Excel
 - **localStorage** - Persistencia de datos
+- **G360 Skill System** - Configuración unificada del cliente y branding
+- **G360 Assets Engine** - Componentes y estilos compartidos del ecosistema
 
 ---
 
@@ -499,7 +553,7 @@ permissions:
 
 **Desarrollador**: Carlos Cusi  
 **Asistencia de código**: Kilo Code - Coding Assistant  
-**Última actualización**: 2026-03-10
+**Última actualización**: 2026-03-24
 
 ---
 
@@ -509,5 +563,5 @@ Proyecto privado - Uso exclusivo para fuerza de ventas.
 
 ---
 
-**Versión**: 1.3.0  
+**Versión**: 2.0  
 **Estado**: ✅ Estable y listo para producción
