@@ -90,9 +90,12 @@ export const G360_CONFIG = {
 
 ### 🔄 Gestión de Productos
 - **Búsqueda por Código/Nombre/EAN**: Búsqueda rápida y flexible
-- **Categorías con Filtros**: Pelotas, Escolar, Representadas
+- **Categorías Dinámicas**: VINIBALL, VINIFAN, REPRESENTADAS (desde JSON)
+- **Tooltip en Nombre**: Al pasar el cursor muestra nombre completo
+- **Badge de Agotados**: Productos sin stock marcados visualmente
 - **Equivalencias Dinámicas**: Conversión automática Unidades ↔ Cajas
 - **Validación de Stock**: Advertencias antes de agregar al carrito
+- **Confirmación de Agotado**: Al agregar producto sin stock
 - **Orden de Ingreso**: Numeración secuencial para cotejo con listas manuales
 
 ### 💾 Persistencia y Sincronización
@@ -144,9 +147,8 @@ g360-order-form/
 │           └── 📄 G360DragModal.jsx # Modal arrastrable G360
 │
 ├── 📁 public/                    # Archivos estáticos
-│   ├── 📄 productos_local.json  # Catálogo de productos
-│   ├── 📄 stock_data.json       # Datos de stock (generado)
-│   ├── 📄 catalogo_completo.json # Catálogo completo
+│   ├── 📄 catalogo_productos.json # Catálogo de productos (fuente oficial)
+│   ├── 📄 stock_data.json       # Datos de stock (generado por GitHub Actions)
 │   ├── 📄 favicon.svg           # Icono de la app
 │   ├── 📄 logo-cipsa.svg        # Logo de CIPSA
 │   └── 📄 404.html              # Página 404 para GitHub Pages
@@ -232,11 +234,11 @@ npm run build
 ## 📦 Configuración del Catálogo
 
 ### Ubicación
-Colocar el archivo **`productos_local.json`** en la carpeta **`public/`**:
+El archivo **`catalogo_productos.json`** debe estar en la carpeta **`public/`**:
 
 ```
 public/
-└── productos_local.json
+└── catalogo_productos.json
 ```
 
 ### Estructura del JSON
@@ -260,15 +262,46 @@ public/
 
 El sistema acepta múltiples nombres de campo y los normaliza automáticamente:
 
+### Estructura del JSON (catalogo_productos.json)
+
+```json
+{
+  "metadata": {
+    "version": "2.0.0",
+    "generated_at": "24/03/2026 20:28:21",
+    "total_productos": 1088
+  },
+  "productos": [
+    {
+      "orden": 1,
+      "sku": "016763",
+      "nombre": "FUTBOL PU FUTURE #5",
+      "ean13": "",
+      "categoria": "VINIBALL",
+      "linea": "PELOTAS",
+      "peso_kg": 0.4,
+      "un_bx": 18,
+      "precio_lista": 70.0,
+      "precio_final": 70.0,
+      "es_remate": false
+    }
+  ]
+}
+```
+
+### Mapeo de Campos
+
 | Campo en JSON | Normalizado a | Descripción |
 |---------------|---------------|-------------|
-| `descripcion` / `nombre` | `nombre` | Nombre del producto |
-| `uni_caja` / `u_por_caja` | `bxSize` | Unidades por caja/bulto |
-| `precio` / `precio_lista` | `precioLista` | Precio de lista (sin IGV) |
-| `ean` | `ean` | Código de barras |
-| `linea` | `linea` | Línea/Categoría |
-| `stock_referencial` / `stock` | `stock` | Stock disponible |
-| `orden` | `orden` | Orden de aparición |
+| `sku` | `codigo` | Código del producto |
+| `nombre` | `nombre` | Nombre del producto |
+| `un_bx` | `bxSize` | Unidades por caja/bulto |
+| `precio_final` / `precio_lista` | `precioLista` | Precio de lista (sin IGV) |
+| `ean13` | `ean` | Código de barras |
+| `categoria` | `categoria` | Categoría (VINIBALL, VINIFAN, REPRESENTADAS) |
+| `linea` | `linea` | Línea de producto |
+| `peso_kg` | `pesoUm` | Peso en KG |
+| `es_remate` | `esRemate` | Producto en oferta |
 
 ---
 
@@ -338,7 +371,8 @@ El sistema acepta múltiples nombres de campo y los normaliza automáticamente:
 
 2. **Buscar y Agregar Productos**
    - Escribir código, nombre o EAN en el buscador
-   - Seleccionar categoría (Todos, Pelotas, Escolar, Representadas)
+   - Seleccionar categoría (Búsqueda, VINIBALL, VINIFAN, REPRESENTADAS)
+   - Al hacer click en búsqueda, cambia automáticamente a modo búsqueda
    - Configurar cantidad y agregar al carrito
 
 3. **Revisar Orden**
@@ -553,7 +587,7 @@ permissions:
 
 **Desarrollador**: Carlos Cusi  
 **Asistencia de código**: Kilo Code - Coding Assistant  
-**Última actualización**: 2026-03-24
+**Última actualización**: 2026-03-25
 
 ---
 
