@@ -1,8 +1,8 @@
-# 📋 CIPSA OrderX v2.0
+# 📋 CIPSA OrderX v2.1
 
 Sistema de gestión de hojas de pedido para fuerza de ventas en el ecosistema G360. Optimizado para móvil y desktop con navegación tipo app, sincronización de stock y catálogo de productos.
 
-![Versión](https://img.shields.io/badge/version-2.0-blue)
+![Versión](https://img.shields.io/badge/version-2.1-blue)
 ![React](https://img.shields.io/badge/React-18-61DAFB)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF)
 ![Tailwind](https://img.shields.io/badge/Tailwind-3-38B2AC)
@@ -108,6 +108,16 @@ export const G360_CONFIG = {
 - **Cargar XLSX**: Importar pedidos guardados previamente
 
 ---
+
+## 🆕 Novedades v2.1
+
+| Feature | Descripción |
+|---------|-------------|
+| **Modal de Producto Compacto** | Click en nombre muestra SKU, nombre, Box y Stock |
+| **Colores Unificados** | Variables CSS en ClientDataModal y Tooltip |
+| **Accesibilidad ARIA** | Atributos role, aria-label, aria-modal en componentes |
+| **Input Optimizado** | Spinners nativos eliminados, solo botones +/- |
+| **Cierre por Click Fuera** | Modal se cierra al click fuera del área |
 
 ## 🆕 Novedades v1.3.0
 
@@ -597,5 +607,5 @@ Proyecto privado - Uso exclusivo para fuerza de ventas.
 
 ---
 
-**Versión**: 2.0  
+**Versión**: 2.1  
 **Estado**: ✅ Estable y listo para producción

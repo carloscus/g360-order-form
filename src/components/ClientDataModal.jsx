@@ -44,13 +44,13 @@ function ClientDataModal({ zIndex = 9999 }) {
         <div className="p-8 sm:p-10">
           <div className="flex justify-between items-start mb-8">
             <div>
-              <h2 className="text-2xl font-black font-premium text-slate-900 dark:text-slate-100 uppercase tracking-tight">
+              <h2 className="text-2xl font-black font-premium text-[var(--g360-text)] uppercase tracking-tight">
                 Datos del Cliente
               </h2>
-              <p className="text-sm text-slate-500 font-medium">Información para la Hoja de Pedido</p>
+              <p className="text-sm text-[var(--g360-muted)] font-medium">Información para la Hoja de Pedido</p>
             </div>
-            <button onClick={() => setShowPedidoModal(false)} className="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
-              <span className="material-symbols-outlined text-slate-400">close</span>
+            <button onClick={() => setShowPedidoModal(false)} className="w-10 h-10 rounded-full bg-[var(--g360-input-bg)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
+              <span className="material-symbols-outlined text-[var(--g360-muted)]">close</span>
             </button>
           </div>
 

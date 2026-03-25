@@ -34,6 +34,8 @@ function CatalogoPage() {
   const [searchQuantities, setSearchQuantities] = useState({});
   const [dynamicCategories, setDynamicCategories] = useState([]);
   const [tooltipProduct, setTooltipProduct] = useState(null);
+  const [addingProduct, setAddingProduct] = useState(null);
+  const [selectedProductDetail, setSelectedProductDetail] = useState(null);
   const debouncedSearch = useDebounce(search, 300);
 
   // Generar categorías desde el JSON
@@ -160,6 +162,56 @@ function CatalogoPage() {
   const pagedItems = filteredProducts.slice((currentPage - 1) * PRODUCTS_PER_PAGE, currentPage * PRODUCTS_PER_PAGE);
   const currentCategory = allCategories.find(c => c.id === activeCatalog);
 
+  // Modal de detalle de producto (compacto)
+  const ProductDetailModal = ({ product, onClose }) => {
+    if (!product) return null;
+    const productStock = getProductStock(product.codigo);
+    const isAgotado = productStock === 0;
+    
+    return (
+      <div 
+        className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
+        onClick={onClose}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="product-detail-title"
+      >
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+        <div 
+          className="relative bg-[var(--g360-surface)] w-full max-w-xs rounded-2xl shadow-2xl border border-[var(--g360-border)] animate-scale-in p-5"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* SKU */}
+          <span className={`text-2xl font-mono font-black tracking-tighter ${product.esRemate ? 'text-yellow-500' : 'text-[var(--g360-accent)]'}`}>
+            {product.codigo}
+          </span>
+          
+          {/* Nombre */}
+          <h2 id="product-detail-title" className="text-sm font-bold text-[var(--g360-text)] mt-2 mb-4 leading-tight">
+            {product.nombre}
+          </h2>
+
+          {/* Info compacta */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-black text-[var(--g360-muted)] uppercase">Box</span>
+              <span className="font-bold text-[var(--g360-text)]">{product.bxSize}U</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-black text-[var(--g360-muted)] uppercase">Stock</span>
+              <div className="flex items-center gap-1.5">
+                <div className={`w-1.5 h-1.5 rounded-full ${isAgotado ? 'bg-red-600' : productStock < 20 ? 'bg-red-500 animate-pulse' : 'bg-[var(--g360-accent)]'}`}></div>
+                <span className={`font-bold ${isAgotado ? 'text-red-600' : 'text-[var(--g360-text)]'}`}>
+                  {isAgotado ? 'AGOTADO' : productStock}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={`transition-all duration-500 ${isSearchFocused ? 'search-focus-active' : ''}`}>
       {isSearchFocused && <div className="search-overlay" onClick={() => setIsSearchFocused(false)} />}
@@ -254,15 +306,12 @@ function CatalogoPage() {
 
               {/* Product Name */}
               <h3 
-                className="relative text-sm sm:text-base font-bold text-[var(--g360-text)] line-clamp-2 leading-tight min-h-[2.4rem] mb-3 tracking-tight group-hover:text-[var(--g360-accent)] transition-colors cursor-help"
-                onClick={() => setTooltipProduct(tooltipProduct === p.codigo ? null : p.codigo)}
+                className="text-sm sm:text-base font-bold text-[var(--g360-text)] line-clamp-2 leading-tight min-h-[2.4rem] mb-3 tracking-tight hover:text-[var(--g360-accent)] transition-colors cursor-pointer"
+                onClick={() => setSelectedProductDetail(p)}
+                role="button"
+                aria-label={`Ver detalles de ${p.nombre}`}
               >
                 {p.nombre}
-                {tooltipProduct === p.codigo && (
-                  <span className="absolute left-0 right-0 -top-10 bg-black/90 text-white text-xs p-2 rounded-lg z-50 whitespace-normal break-words shadow-xl">
-                    {p.nombre}
-                  </span>
-                )}
               </h3>
 
               {/* Combined Info Section: Stock + Box + Price */}
@@ -292,7 +341,7 @@ function CatalogoPage() {
                     </button>
                     <input
                       type="number"
-                      className="w-full text-center bg-transparent border-none text-sm font-black p-0 focus:ring-0 text-[var(--g360-text)]"
+                      className="w-full text-center bg-transparent border-none text-sm font-black p-0 focus:ring-0 text-[var(--g360-text)] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       value={searchQuantities[p.codigo] || 0}
                       onChange={e => setSearchQuantities(v => ({...v, [p.codigo]: parseInt(e.target.value) || 0}))}
                     />
@@ -362,6 +411,14 @@ function CatalogoPage() {
                <span className="material-symbols-outlined text-2xl">east</span>
            </button>
         </div>
+      )}
+
+      {/* Modal de Detalle de Producto */}
+      {selectedProductDetail && (
+        <ProductDetailModal 
+          product={selectedProductDetail} 
+          onClose={() => setSelectedProductDetail(null)} 
+        />
       )}
     </div>
   );
