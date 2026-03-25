@@ -57,7 +57,7 @@ function CatalogoPage() {
       // Cargar stock primero
       loadStockFromStorage();
       
-      const response = await fetch(`${getBaseUrl()}catalogo_completo.json?t=${Date.now()}`);
+      const response = await fetch(`${getBaseUrl()}catalogo_productos.json?t=${Date.now()}`);
       const data = await response.json();
       setProductos(data.productos.map((p, index) => ({
         codigo: p.sku,
@@ -194,8 +194,9 @@ function CatalogoPage() {
           ))
         ) : pagedItems.map(p => {
           const productStock = getProductStock(p.codigo);
+          const isAgotado = productStock === 0;
           return (
-            <div key={p.codigo} className={`g360-card relative flex flex-col p-3 hover:border-[var(--g360-accent)]/40 ${p.esRemate ? 'ring-2 ring-yellow-500/50 bg-yellow-500/5' : ''}`}>
+            <div key={p.codigo} className={`g360-card relative flex flex-col p-3 hover:border-[var(--g360-accent)]/40 ${p.esRemate ? 'ring-2 ring-yellow-500/50 bg-yellow-500/5' : ''} ${isAgotado ? 'ring-2 ring-red-500/50 bg-red-500/5 opacity-75' : ''}`}>
               
               {/* Badge REMATE */}
               {p.esRemate && (
@@ -203,6 +204,16 @@ function CatalogoPage() {
                   <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-2 py-1 rounded-bl-xl rounded-tr-xl flex items-center gap-1 shadow-lg">
                     <span className="text-sm">🏷️</span>
                     <span className="text-xs font-black uppercase tracking-wider">OFERTA</span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Badge AGOTADO */}
+              {isAgotado && (
+                <div className="absolute -top-1 -left-1 z-10">
+                  <div className="bg-gradient-to-r from-red-600 to-red-800 text-white px-2 py-1 rounded-br-xl rounded-tl-xl flex items-center gap-1 shadow-lg">
+                    <span className="text-sm">🚫</span>
+                    <span className="text-xs font-black uppercase tracking-wider">AGOTADO</span>
                   </div>
                 </div>
               )}
@@ -227,8 +238,8 @@ function CatalogoPage() {
               <div className="bg-[var(--g360-input-bg)]/50 rounded-2xl p-3 border border-[var(--g360-border)] mb-3">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-1.5">
-                    <div className={`w-2 h-2 rounded-full ${productStock < 20 ? 'bg-red-500 animate-pulse' : 'bg-[var(--g360-accent)]'}`}></div>
-                    <span className="text-xs font-black text-[var(--g360-muted)] uppercase">Stock: {productStock}</span>
+                    <div className={`w-2 h-2 rounded-full ${isAgotado ? 'bg-red-600' : productStock < 20 ? 'bg-red-500 animate-pulse' : 'bg-[var(--g360-accent)]'}`}></div>
+                    <span className={`text-xs font-black uppercase ${isAgotado ? 'text-red-600' : 'text-[var(--g360-muted)]'}`}>{isAgotado ? 'AGOTADO' : `Stock: ${productStock}`}</span>
                   </div>
                   <span className="px-2 py-0.5 bg-[var(--g360-surface)] rounded text-xs font-black text-[var(--g360-muted)] border border-[var(--g360-border)]">Box: {p.bxSize}U</span>
                 </div>
@@ -275,6 +286,12 @@ function CatalogoPage() {
                   onClick={() => {
                     const q = searchQuantities[p.codigo] || 0;
                     if(q > 0) {
+                      // Si está agotado, confirmar antes de agregar
+                      if (isAgotado) {
+                        if (!confirm(`⚠️ El producto ${p.codigo} - ${p.nombre} está AGOTADO.\n\n¿Desea agregarlo de todas maneras?`)) {
+                          return;
+                        }
+                      }
                       addToCart(p, q);
                       setSearchQuantities(v => ({...v, [p.codigo]: 0}));
                     }
