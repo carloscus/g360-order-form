@@ -10,12 +10,15 @@ import { useApp } from '../context/AppContext';
 import { formatMoney } from '../utils/formatters';
 import { getBaseUrl } from '../utils/baseUrl';
 
-const CATEGORIES = [
-  { id: 'todos', label: 'Búsqueda', icon: 'search', isFreeSearch: true, ghost: 'Search' },
-  { id: 'pelotas', label: 'Pelotas', icon: 'sports_baseball', lines: ['PELOTAS', 'JUGUETES', 'MASCOTAS', 'OTROS'], ghost: 'Balls' },
-  { id: 'escolar', label: 'Escolar', icon: 'school', lines: ['METALICA', 'FORROS', 'ARCHIVO', 'PINTURA', 'ESCRITURA', 'ACCESORIOS', 'MANUALIDADES', 'DIDACTICOS', 'PEGAMENTOS', 'DIBUJO'], ghost: 'School' },
-  { id: 'representadas', label: 'Representadas', icon: 'stars', lines: ['REPRESENTADAS', 'PRODUCTOS INDUSTRIALES', 'PUBLICIDAD'], ghost: 'Brands' },
-];
+//hardcoded
+const SEARCH_CATEGORY = { id: 'todos', label: 'Búsqueda', icon: 'search', isFreeSearch: true, ghost: 'Search' };
+
+// Iconos por categoría (categoria del JSON)
+const CATEGORY_ICONS = {
+  VINIBALL: 'sports_baseball',
+  VINIFAN: 'school',
+  REPRESENTADAS: 'stars'
+};
 
 const PRODUCTS_PER_PAGE = 24;
 
@@ -29,7 +32,13 @@ function CatalogoPage() {
   const [activeCatalog, setActiveCatalog] = useState('todos');
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuantities, setSearchQuantities] = useState({});
+  const [dynamicCategories, setDynamicCategories] = useState([]);
   const debouncedSearch = useDebounce(search, 300);
+
+  // Generar categorías desde el JSON
+  const allCategories = useMemo(() => {
+    return [SEARCH_CATEGORY, ...dynamicCategories];
+  }, [dynamicCategories]);
 
   // Cargar stock desde localStorage
   const loadStockFromStorage = useCallback(() => {
@@ -59,6 +68,19 @@ function CatalogoPage() {
       
       const response = await fetch(`${getBaseUrl()}catalogo_productos.json?t=${Date.now()}`);
       const data = await response.json();
+      
+      // Generar categorías únicas desde el campo 'categoria' del JSON
+      const categoriasUnicas = [...new Set(data.productos.map(p => p.categoria?.toUpperCase().trim()).filter(Boolean))];
+      const categoriasGeneradas = categoriasUnicas.map(cat => ({
+        id: cat.toLowerCase(),
+        label: cat.charAt(0) + cat.slice(1).toLowerCase(),
+        icon: CATEGORY_ICONS[cat] || 'category',
+        categoria: cat,
+        ghost: cat
+      })).sort((a, b) => b.label.localeCompare(a.label)); // Ordenar alfabético inverso
+      
+      setDynamicCategories(categoriasGeneradas);
+      
       setProductos(data.productos.map((p, index) => ({
         codigo: p.sku,
         nombre: p.nombre || '',
@@ -68,6 +90,7 @@ function CatalogoPage() {
         ean: p.ean13 || '',
         ean14: '',
         linea: p.linea?.toUpperCase().trim() || '',
+        categoria: p.categoria?.toUpperCase().trim() || '',
         // Stock se obtiene del stockData cargado
         orden: p.orden || index + 1,
         isNew: index < 20,
@@ -102,7 +125,7 @@ function CatalogoPage() {
 
   const filteredProducts = useMemo(() => {
     let result = productos;
-    const currentCat = CATEGORIES.find(c => c.id === activeCatalog);
+    const currentCat = allCategories.find(c => c.id === activeCatalog);
 
     if (currentCat.isFreeSearch) {
       if (debouncedSearch.trim()) {
@@ -118,9 +141,8 @@ function CatalogoPage() {
       }
     } else {
       result = result.filter(p => {
-        const isRepresentadaBySku = p.codigo.startsWith('85');
-        if (isRepresentadaBySku) return currentCat.id === 'representadas';
-        return currentCat.lines.includes(p.linea);
+        // Filtrar por categoría del JSON
+        return p.categoria?.toUpperCase() === currentCat.categoria;
       });
       if (debouncedSearch.trim()) {
         const query = debouncedSearch.toLowerCase();
@@ -135,7 +157,7 @@ function CatalogoPage() {
   }, [productos, activeCatalog, debouncedSearch]);
 
   const pagedItems = filteredProducts.slice((currentPage - 1) * PRODUCTS_PER_PAGE, currentPage * PRODUCTS_PER_PAGE);
-  const currentCategory = CATEGORIES.find(c => c.id === activeCatalog);
+  const currentCategory = allCategories.find(c => c.id === activeCatalog);
 
   return (
     <div className={`transition-all duration-500 ${isSearchFocused ? 'search-focus-active' : ''}`}>
@@ -157,7 +179,7 @@ function CatalogoPage() {
       {/* Navigation & Search Sticky */}
       <div className="sticky top-20 z-40 bg-[var(--g360-bg)]/80 backdrop-blur-2xl py-3 -mx-4 px-4 lg:-mx-8 lg:px-8 border-b border-[var(--g360-border)] search-container rounded-b-[2.5rem]">
          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-4 mb-4">
-            {CATEGORIES.map(cat => (
+            {allCategories.map(cat => (
               <button
                 key={cat.id}
                 onClick={() => { setActiveCatalog(cat.id); setCurrentPage(1); }}
@@ -181,7 +203,7 @@ function CatalogoPage() {
               className="w-full bg-[var(--g360-input-bg)] border-2 border-[var(--g360-border)] rounded-[1.5rem] py-4 pl-14 pr-6 text-sm font-bold text-[var(--g360-text)] focus:border-[var(--g360-accent)] outline-none transition-all"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              onFocus={() => setIsSearchFocused(true)}
+              onFocus={() => { setIsSearchFocused(true); setActiveCatalog('todos'); }}
             />
          </div>
       </div>
