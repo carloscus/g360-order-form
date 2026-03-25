@@ -33,6 +33,7 @@ function CatalogoPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuantities, setSearchQuantities] = useState({});
   const [dynamicCategories, setDynamicCategories] = useState([]);
+  const [tooltipProduct, setTooltipProduct] = useState(null);
   const debouncedSearch = useDebounce(search, 300);
 
   // Generar categorías desde el JSON
@@ -253,10 +254,15 @@ function CatalogoPage() {
 
               {/* Product Name */}
               <h3 
-                className="text-sm sm:text-base font-bold text-[var(--g360-text)] line-clamp-2 leading-tight min-h-[2.4rem] mb-3 tracking-tight group-hover:text-[var(--g360-accent)] transition-colors cursor-help"
-                title={p.nombre}
+                className="relative text-sm sm:text-base font-bold text-[var(--g360-text)] line-clamp-2 leading-tight min-h-[2.4rem] mb-3 tracking-tight group-hover:text-[var(--g360-accent)] transition-colors cursor-help"
+                onClick={() => setTooltipProduct(tooltipProduct === p.codigo ? null : p.codigo)}
               >
                 {p.nombre}
+                {tooltipProduct === p.codigo && (
+                  <span className="absolute left-0 right-0 -top-10 bg-black/90 text-white text-xs p-2 rounded-lg z-50 whitespace-normal break-words shadow-xl">
+                    {p.nombre}
+                  </span>
+                )}
               </h3>
 
               {/* Combined Info Section: Stock + Box + Price */}
