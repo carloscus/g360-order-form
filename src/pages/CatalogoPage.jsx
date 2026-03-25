@@ -252,7 +252,10 @@ function CatalogoPage() {
               </div>
 
               {/* Product Name */}
-              <h3 className="text-sm sm:text-base font-bold text-[var(--g360-text)] line-clamp-2 leading-tight min-h-[2.4rem] mb-3 tracking-tight group-hover:text-[var(--g360-accent)] transition-colors">
+              <h3 
+                className="text-sm sm:text-base font-bold text-[var(--g360-text)] line-clamp-2 leading-tight min-h-[2.4rem] mb-3 tracking-tight group-hover:text-[var(--g360-accent)] transition-colors cursor-help"
+                title={p.nombre}
+              >
                 {p.nombre}
               </h3>
 
