@@ -179,7 +179,7 @@ function ClientDataModal() {
 
             {/* Dropdown de resultados */}
             {dropdownAbierto && termino.trim().length >= 2 && (
-              <div className="absolute z-20 left-0 right-0 mt-2 bg-[var(--g360-surface)] border border-[var(--g360-border)] rounded-2xl shadow-2xl overflow-hidden">
+              <div className="absolute z-30 left-0 right-0 mt-2 bg-[var(--g360-surface)] border border-[var(--g360-border)] rounded-2xl shadow-2xl overflow-hidden">
                 {errorBusqueda ? (
                   <p className="px-4 py-3 text-xs text-red-500 font-bold">{errorBusqueda}</p>
                 ) : buscando ? (

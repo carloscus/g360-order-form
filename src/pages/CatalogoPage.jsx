@@ -174,7 +174,7 @@ function CatalogoPage() {
   const isLoading = status === 'loading' || status === 'idle';
 
   return (
-    <div className={`transition-all duration-500 ${isSearchFocused ? 'search-focus-active' : ''}`}>
+    <div className={`transition-all duration-500 ${isSearchFocused && !search.trim() ? 'search-focus-active' : ''}`}>
       {isSearchFocused && <div className="search-overlay" onClick={() => setIsSearchFocused(false)} />}
 
       {/* Flujo de tienda: Paso 1 - Cliente */}
