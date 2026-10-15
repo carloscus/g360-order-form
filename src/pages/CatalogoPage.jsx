@@ -10,6 +10,7 @@ import { useApp } from '../context/AppContext';
 import { useStockCatalog } from '../hooks/useStockCatalog';
 import { formatMoney } from '../utils/formatters';
 import Paginador from '../components/Paginador';
+import useVoz from '../hooks/useVoz';
 
 // Categorías fijas de venta (decisión de negocio: solo estas 3)
 const CATEGORIES = [
@@ -109,6 +110,10 @@ function CatalogoPage() {
   const [searchQuantities, setSearchQuantities] = useState({});
   const [selectedProductDetail, setSelectedProductDetail] = useState(null);
   const debouncedSearch = useDebounce(search, 300);
+
+  const { escuchando, soportado: vozSoportada, escuchar, detener } = useVoz({
+    onTexto: (t) => { setSearch(t); setActiveCatalog('todos'); }
+  });
 
   const clienteCargado = Boolean(clientData.ruc || clientData.nombre);
 
@@ -247,11 +252,27 @@ function CatalogoPage() {
             <input
               type="text"
               placeholder="Buscar SKU o nombre..."
-              className="w-full bg-[var(--g360-input-bg)] border-2 border-[var(--g360-border)] rounded-[1.5rem] py-4 pl-14 pr-6 text-sm font-bold text-[var(--g360-text)] focus:border-[var(--g360-accent)] outline-none transition-all"
+              className="w-full bg-[var(--g360-input-bg)] border-2 border-[var(--g360-border)] rounded-[1.5rem] py-4 pl-14 pr-14 text-sm font-bold text-[var(--g360-text)] focus:border-[var(--g360-accent)] outline-none transition-all"
               value={search}
               onChange={e => setSearch(e.target.value)}
               onFocus={() => { setIsSearchFocused(true); setActiveCatalog('todos'); }}
             />
+            {vozSoportada && (
+              <button
+                type="button"
+                onClick={() => (escuchando ? detener() : escuchar())}
+                title={escuchando ? 'Detener dictado' : 'Buscar por voz'}
+                aria-label="Buscar por voz"
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--g360-surface)] transition-all"
+              >
+                <span className={`material-symbols-outlined text-2xl ${escuchando ? 'text-red-500 animate-pulse' : 'text-[var(--g360-muted)]'}`}>mic</span>
+              </button>
+            )}
+            {escuchando && (
+              <p className="absolute left-14 -bottom-5 text-[9px] font-black uppercase tracking-[0.2em] text-red-500 animate-pulse pointer-events-none">
+                ● Escuchando... di el SKU o nombre
+              </p>
+            )}
          </div>
       </div>
 

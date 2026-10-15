@@ -41,16 +41,10 @@
 <body class="skill-order">
     <div id="root"></div>
 
+    <!-- Signature G360 oficial (web component: isotipo 3 puntos + chevron + "powered by G360") -->
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 100;">
+        <g360-signature mode="powered"></g360-signature>
+    </div>
+    <script type="module" src="/g360-signature.js"></script>
   </body>
-
-   <!-- Signature G360: isotipo = 3 puntos verticales paralelos (gris-acento-gris) + chevron -->
-   <div style="position: fixed; bottom: 20px; right: 20px; font-size: 10px; color: var(--g360-muted); z-index: 100; display: flex; align-items: center; gap: 6px;">
-       <span aria-hidden="true" style="display: inline-flex; flex-direction: column; gap: 2px;">
-           <i style="width: 3px; height: 3px; border-radius: 50%; background: var(--g360-muted); display: block;"></i>
-           <i style="width: 3px; height: 3px; border-radius: 50%; background: var(--g360-accent); display: block;"></i>
-           <i style="width: 3px; height: 3px; border-radius: 50%; background: var(--g360-muted); display: block;"></i>
-       </span>
-       <span aria-hidden="true" style="color: var(--g360-accent); font-weight: bold;">></span>
-       <span>Powered by <span style="color: var(--g360-accent); font-weight: bold;">G360</span> | CCUSI 2026</span>
-   </div>
 </html>

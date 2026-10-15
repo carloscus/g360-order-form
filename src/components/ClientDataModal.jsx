@@ -9,6 +9,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { useDebounce } from '../hooks/useDebounce';
+import useVoz from '../hooks/useVoz';
 import { buscarClientes, displayId, mapearClienteDeVenta } from '../services/clientesService';
 
 // Componente DocumentInput con auto-detección (Marca Snippet)
@@ -50,6 +51,10 @@ function ClientDataModal() {
   const [dropdownAbierto, setDropdownAbierto] = useState(false);
   const searchRef = useRef(null);
   const debouncedTermino = useDebounce(termino, 300);
+
+  const { escuchando, soportado: vozSoportada, escuchar, detener } = useVoz({
+    onTexto: (t) => { setTermino(t); setDropdownAbierto(true); }
+  });
 
   useEffect(() => {
     if (showPedidoModal) {
@@ -99,8 +104,7 @@ function ClientDataModal() {
     const mapeado = mapearClienteDeVenta(row);
     setFormData(prev => ({ ...prev, ...mapeado }));
     setSeleccionado(mapeado);
-    setTermino('');
-    setResultados([]);
+    // Búsqueda continua: se conservan término y resultados para seguir buscando
     setDropdownAbierto(false);
   };
 
@@ -145,17 +149,33 @@ function ClientDataModal() {
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[var(--g360-muted)] text-xl pointer-events-none">search</span>
               <input
                 type="text"
-                className="input-minimal pl-11 pr-10"
+                className="input-minimal pl-11 pr-20"
                 placeholder="Código, RUC o nombre del cliente..."
                 value={termino}
                 onChange={e => { setTermino(e.target.value); setDropdownAbierto(true); }}
                 onFocus={() => setDropdownAbierto(true)}
                 autoComplete="off"
               />
+              {vozSoportada && (
+                <button
+                  type="button"
+                  onClick={() => (escuchando ? detener() : escuchar())}
+                  title={escuchando ? 'Detener dictado' : 'Buscar por voz'}
+                  aria-label="Buscar cliente por voz"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full hover:bg-[var(--g360-input-bg)] transition-all"
+                >
+                  <span className={`material-symbols-outlined text-xl ${escuchando ? 'text-red-500 animate-pulse' : 'text-[var(--g360-muted)]'}`}>mic</span>
+                </button>
+              )}
               {buscando && (
-                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[var(--g360-accent)] text-xl animate-spin">progress_activity</span>
+                <span className="material-symbols-outlined absolute right-12 top-1/2 -translate-y-1/2 text-[var(--g360-accent)] text-xl animate-spin">progress_activity</span>
               )}
             </div>
+            {escuchando && (
+              <p className="mt-1 ml-1 text-[9px] font-black uppercase tracking-[0.2em] text-red-500 animate-pulse">
+                ● Escuchando... di el código, RUC o nombre
+              </p>
+            )}
 
             {/* Dropdown de resultados */}
             {dropdownAbierto && termino.trim().length >= 2 && (

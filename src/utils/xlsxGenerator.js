@@ -64,7 +64,7 @@ export function buildResumenRows(selectedProducts) {
     ['', '', '', '', '', `TOTAL REFERENCIAL: S/ ${monto.toFixed(2)}`],
     ['', '', '', '', '', 'NOTA: Precios referenciales sin descuentos ni IGV. Sujeto a cotización final.'],
     ['', '', '', '', '', `Generado: ${fecha} · CIPSA OrderX`],
-    ['', '', '', '', '', 'Autor: CCUSI · ⋮> Powered by G360']
+    ['', '', '', '', '', '⋮> powered by G360']
   ];
 }
 
