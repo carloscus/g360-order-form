@@ -21,6 +21,7 @@ function OrdenPage() {
     updateCartQuantity,
     removeFromCart,
     clearCart,
+    clearClientData,
     setShowPedidoModal,
     setClientDataAll
   } = useApp();
@@ -32,6 +33,7 @@ function OrdenPage() {
 
   const navigate = useNavigate();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [limpiarClienteTambien, setLimpiarClienteTambien] = useState(false);
   const [showExportConfirm, setShowExportConfirm] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const hasRedirectedRef = useRef(false);
@@ -225,13 +227,22 @@ function OrdenPage() {
       {/* FLOTANTE: Confirmación Vaciar */}
       {showClearConfirm && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center pointer-events-none p-4">
-          <div className="fixed inset-0 bg-black/20 backdrop-blur-[2px] pointer-events-auto" onClick={() => setShowClearConfirm(false)} />
-          <div className="relative bg-[var(--g360-surface)] border border-red-500/20 rounded-[2rem] p-6 max-w-[260px] w-full animate-scale-in text-center shadow-2xl pointer-events-auto">
+          <div className="fixed inset-0 bg-black/20 backdrop-blur-[2px] pointer-events-auto" onClick={() => { setShowClearConfirm(false); setLimpiarClienteTambien(false); }} />
+          <div className="relative bg-[var(--g360-surface)] border border-red-500/20 rounded-[2rem] p-6 max-w-[280px] w-full animate-scale-in text-center shadow-2xl pointer-events-auto">
             <div className="w-12 h-1 bg-red-500/30 mx-auto mb-6 rounded-full"></div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-[var(--g360-text)] mb-6">¿VACIAR CARRITO?</h3>
+            <h3 className="text-xs font-black uppercase tracking-widest text-[var(--g360-text)] mb-4">¿VACIAR CARRITO?</h3>
+            <label className="flex items-center justify-center gap-2 mb-6 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={limpiarClienteTambien}
+                onChange={e => setLimpiarClienteTambien(e.target.checked)}
+                className="w-4 h-4 accent-red-500"
+              />
+              <span className="text-[10px] font-bold text-[var(--g360-muted)] uppercase tracking-wide">¿Limpiar también el cliente?</span>
+            </label>
             <div className="flex gap-3">
-              <button onClick={() => setShowClearConfirm(false)} className="flex-1 py-3 bg-[var(--g360-input-bg)] rounded-xl text-[9px] font-black uppercase text-[var(--g360-text)]">NO</button>
-              <button onClick={() => { clearCart(); setShowClearConfirm(false); navigate('/catalogo'); }} className="flex-1 py-3 bg-red-500 text-white rounded-xl font-black text-[9px] uppercase shadow-lg shadow-red-500/20">VACIAR</button>
+              <button onClick={() => { setShowClearConfirm(false); setLimpiarClienteTambien(false); }} className="flex-1 py-3 bg-[var(--g360-input-bg)] rounded-xl text-[9px] font-black uppercase text-[var(--g360-text)]">NO</button>
+              <button onClick={() => { clearCart(); if (limpiarClienteTambien) clearClientData(); setLimpiarClienteTambien(false); setShowClearConfirm(false); navigate('/catalogo'); }} className="flex-1 py-3 bg-red-500 text-white rounded-xl font-black text-[9px] uppercase shadow-lg shadow-red-500/20">VACIAR</button>
             </div>
           </div>
         </div>

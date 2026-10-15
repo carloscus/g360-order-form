@@ -39,24 +39,27 @@ const saveToStorage = (key, value) => {
   }
 };
 
+// Valores por defecto de clientData (usados al inicializar y al limpiar)
+const CLIENT_DEFAULTS = {
+  id_cliente: '',
+  ruc: '',
+  nombre: '',
+  oc: '',
+  provincia: '',
+  direccion: '',
+  vendedor: '',
+  id_vendedor: '',
+  telefono: '',
+  email: ''
+};
+
 export function AppProvider({ children }) {
   // Estado de productos seleccionados (carrito) - valores por defecto para SSR
   const [selectedProducts, setSelectedProducts] = useState({});
   const [nextOrderIndex, setNextOrderIndex] = useState(1);
 
   // Estado del cliente - valores por defecto para SSR
-  const [clientData, setClientData] = useState({
-    id_cliente: '',
-    ruc: '',
-    nombre: '',
-    oc: '',
-    provincia: '',
-    direccion: '',
-    vendedor: '',
-    id_vendedor: '',
-    telefono: '',
-    email: ''
-  });
+  const [clientData, setClientData] = useState({ ...CLIENT_DEFAULTS });
 
   // Estado del tema (claro/oscuro) - default a false para SSR
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -70,18 +73,7 @@ export function AppProvider({ children }) {
     // Cargar datos del localStorage
     setSelectedProducts(loadFromStorage(STORAGE_KEYS.CART, {}));
     setNextOrderIndex(loadFromStorage(STORAGE_KEYS.ORDER_INDEX, 1));
-    setClientData(loadFromStorage(STORAGE_KEYS.CLIENT, {
-      id_cliente: '',
-      ruc: '',
-      nombre: '',
-      oc: '',
-      provincia: '',
-      direccion: '',
-      vendedor: '',
-      id_vendedor: '',
-      telefono: '',
-      email: ''
-    }));
+    setClientData(loadFromStorage(STORAGE_KEYS.CLIENT, { ...CLIENT_DEFAULTS }));
 
     // Cargar tema con preferencia del sistema como fallback
     const savedTheme = loadFromStorage(STORAGE_KEYS.THEME, null);
@@ -232,6 +224,11 @@ export function AppProvider({ children }) {
     localStorage.removeItem(STORAGE_KEYS.ORDER_INDEX);
   }, []);
 
+  // Limpiar datos del cliente (opcional al vaciar carrito)
+  const clearClientData = useCallback(() => {
+    setClientData({ ...CLIENT_DEFAULTS });
+  }, []);
+
   // Total de productos en carrito
   const cartCount = useMemo(() => Object.keys(selectedProducts).length, [selectedProducts]);
 
@@ -292,6 +289,7 @@ export function AppProvider({ children }) {
     updateCartQuantity,
     removeFromCart,
     clearCart,
+    clearClientData,
     updateClientData,
     setClientDataAll,
     setShowPedidoModal,
