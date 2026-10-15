@@ -1,4 +1,4 @@
-# 🛒 CIPSA OrderX v3.0.0 — Tienda Virtual
+﻿# 🛒 CIPSA OrderX v3.0.0 — Tienda Virtual
 
 > Tienda virtual de pedidos para fuerza de ventas CIPSA: catálogo y stock en vivo, búsqueda de clientes y generación de Hoja de Pedido. Forma parte de la familia de microherramientas G360.
 
@@ -117,7 +117,6 @@ g360-order-form/
 │
 ├── 📁 .github/
 │   └── 📁 workflows/
-│       └── 📄 update-stock.yml  # GitHub Actions para stock
 │
 ├── 📁 public/                    # Archivos estáticos
 │   ├── 📄 productos_local.json  # Catálogo de productos
@@ -280,7 +279,6 @@ VITE_STOCK_API_KEY=cipsa2026
 
 ### Workflows
 
-- update-stock.yml (DEPRECATED): bot de descarga horaria de appweb que generaba PRs update/stock-*; obsoleto desde v3 (fuente real es la API Render).
 - deploy.yml (ACTIVO): push a main ejecuta npm ci + npm run deploy (build + gh-pages). Requiere Workflow permissions read/write y los 4 secrets VITE_*. Los push en ramas update/* no activan nada (trigger solo main).
 
 ---
@@ -506,7 +504,6 @@ node scripts/setup-gh-pages-protection.js
 
 ### Permisos del Workflow
 
-El workflow [`update-stock.yml`](.github/workflows/update-stock.yml) usa el principio de menor privilegio:
 
 ```yaml
 permissions:

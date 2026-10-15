@@ -1,0 +1,14 @@
+{
+  "fidelity": "brand",
+  "fonts": { "heading": "Outfit", "body": "Inter" },
+  "colours": {
+    "ink": "#0f172a",
+    "paper": "#f8fafc",
+    "surface": "#ffffff",
+    "accent": "#475569",
+    "muted": "#64748b",
+    "danger": "#dc2626",
+    "warning": "#d97706",
+    "success": "#059669"
+  }
+}
