@@ -1,38 +1,40 @@
 import React from 'react';
 
-/**
- * DocumentInput - CIPSA Premium Edition
- * Reusable component for DNI/RUC input with auto-detection.
- */
+// Componente reutilizable para input de documento (DNI/RUC)
+// Detecta automáticamente el tipo basado en la longitud
 export const DocumentInput = ({
   value,
   onChange,
   placeholder = '8 o 11 dígitos',
-  className = 'input-minimal w-full pr-16 text-lg font-bold'
+  className = 'high-contrast-input'
 }) => {
   const isRuc = value?.length > 8;
   const documentType = isRuc ? 'RUC' : 'DNI';
 
   const handleInputChange = (e) => {
-    // Only numbers, max 11 digits
-    const input = e.target.value.replace(/\D/g, '').slice(0, 11);
+    const input = e.target.value.replace(/\D/g, ''); // Solo números
     onChange(input);
   };
 
   return (
-    <div className="relative flex items-center group w-full">
+    <div className="input-with-badge">
       <input
         type="text"
+        maxLength="11"
         className={className}
-        value={value || ''}
+        value={value}
         onChange={handleInputChange}
         placeholder={placeholder}
       />
-      <span className={`absolute right-4 px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-tighter text-white transition-all duration-300 pointer-events-none ${isRuc ? 'bg-rose-500 shadow-lg shadow-rose-500/20' : 'bg-[var(--g360-accent)] shadow-lg shadow-[var(--g360-glow)]'}`}>
+      <span className={`doc-badge ${isRuc ? 'ruc' : 'dni'}`}>
         {documentType}
       </span>
     </div>
   );
 };
 
-export default DocumentInput;
+// CSS requerido:
+// .input-with-badge { position: relative; display: flex; align-items: center; }
+// .doc-badge { position: absolute; right: 16px; font-size: 10px; font-weight: 900; padding: 4px 10px; border-radius: 6px; color: white; pointer-events: none; }
+// .doc-badge.ruc { background: #ef4444; }
+// .doc-badge.dni { background: var(--g360-accent); }

@@ -1,80 +1,119 @@
 import * as XLSX from 'xlsx';
 
 /**
- * Genera un archivo Excel con el formato específico para hoja de pedido
- * @param {Object} clientData - Datos del cliente
- * @param {Array} selectedProducts - Productos seleccionados con cantidades
- * @returns {void} - Descarga el archivo Excel
+ * Generador de la Hoja de Pedido (Excel)
+ * Contrato de columnas (fila 1, intocable para el proceso downstream):
+ *   A RUC | B OC | C SKU | D CANTIDAD | E PRECIO | F OBSERVACIONES | G ID_CLIENTE | H VENDEDOR
+ * Al final se agregan filas de resumen (sin SKU, el importador las omite):
+ *   unidades totales, cajas, total referencial, nota y fecha de generación.
  */
-export function generateExcel(clientData, selectedProducts) {
-  if (!selectedProducts || selectedProducts.length === 0) {
-    alert('No hay productos seleccionados para exportar');
-    return;
-  }
 
-  const wb = XLSX.utils.book_new();
+export const PEDIDO_HEADERS = [
+  'RUC',
+  'OC',
+  'SKU',
+  'CANTIDAD',
+  'PRECIO',
+  'OBSERVACIONES',
+  'ID_CLIENTE',
+  'VENDEDOR'
+];
 
-  // Fila de encabezados según formato especificado
-  const headers = [
-    'RUC',
-    'OC',
-    'SKU',
-    'CANTIDAD',
-    'PRECIO',
-    'OBSERVACIONES'
-  ];
-
-  // Crear datos con formato específico de 6 columnas
-  const productRows = selectedProducts.map(product => [
+/**
+ * Filas de productos (8 columnas, formato del contrato)
+ */
+export function buildProductRows(clientData, selectedProducts) {
+  return selectedProducts.map(product => [
     clientData.ruc || '',                       // A: RUC (se repite)
     clientData.oc || '',                        // B: OC (se repite)
     product.codigo,                             // C: SKU
     Number(product.cantidad).toFixed(2),        // D: Cantidad con 2 decimales
     Number(product.precioLista).toFixed(2),     // E: Precio con 2 decimales
-    product.observacion || ''                   // F: Observaciones
+    product.observacion || '',                  // F: Observaciones
+    clientData.id_cliente || '',                // G: ID Cliente (canónico)
+    clientData.vendedor || ''                   // H: Vendedor
   ]);
+}
 
-  // Combinar encabezados + datos
-  const data = [headers, ...productRows];
+/**
+ * Totales del pedido
+ */
+export function calcularTotales(selectedProducts) {
+  return selectedProducts.reduce(
+    (acc, p) => {
+      acc.unidades += Number(p.cantidad) || 0;
+      acc.cajas += Math.ceil((Number(p.cantidad) || 0) / Math.max(1, Number(p.bxSize) || 1));
+      acc.monto += (Number(p.precioLista) || 0) * (Number(p.cantidad) || 0);
+      return acc;
+    },
+    { unidades: 0, cajas: 0, monto: 0 }
+  );
+}
 
-  // Crear hoja de cálculo
+/**
+ * Filas de resumen al pie (sin SKU → el importador las saltea)
+ */
+export function buildResumenRows(selectedProducts) {
+  const { unidades, cajas, monto } = calcularTotales(selectedProducts);
+  const ahora = new Date();
+  const fecha = ahora.toLocaleString('es-PE', { timeZone: 'America/Lima' });
+  return [
+    [],
+    ['', '', '', '', '', `UNIDADES TOTALES: ${unidades} · CAJAS: ${cajas}`],
+    ['', '', '', '', '', `TOTAL REFERENCIAL: S/ ${monto.toFixed(2)}`],
+    ['', '', '', '', '', 'NOTA: Precios referenciales sin descuentos ni IGV. Sujeto a cotización final.'],
+    ['', '', '', '', '', `Generado: ${fecha} · CIPSA OrderX`]
+  ];
+}
+
+/**
+ * Nombre de archivo estándar: OC_(ruc)_(provincia)_(oc_o_fecha).xlsx
+ */
+export function buildFileName(clientData) {
+  const now = new Date();
+  const dateStr = `${String(now.getDate()).padStart(2, '0')}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getFullYear()).slice(-2)}`;
+  const provincia = (clientData.provincia || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const ruc = clientData.ruc || 'sin_ruc';
+  const ocOrFecha = clientData.oc || dateStr;
+  return `OC_${ruc}_${provincia || 'sin_sucursal'}_${ocOrFecha}.xlsx`;
+}
+
+/**
+ * Genera el workbook de la Hoja de Pedido (sin descargarlo)
+ */
+export function buildWorkbook(clientData, selectedProducts) {
+  const wb = XLSX.utils.book_new();
+  const data = [
+    PEDIDO_HEADERS,
+    ...buildProductRows(clientData, selectedProducts),
+    ...buildResumenRows(selectedProducts)
+  ];
   const ws = XLSX.utils.aoa_to_sheet(data);
-
-  // Configurar anchos de columna
   ws['!cols'] = [
     { wch: 15 },  // A: RUC
     { wch: 12 },  // B: OC
     { wch: 12 },  // C: SKU
     { wch: 12 },  // D: CANTIDAD
     { wch: 12 },  // E: PRECIO
-    { wch: 30 },  // F: OBSERVACIONES
+    { wch: 55 },  // F: OBSERVACIONES / resumen
+    { wch: 12 },  // G: ID_CLIENTE
+    { wch: 24 },  // H: VENDEDOR
   ];
-
-  // Agregar hoja al libro con nombre de la provincia/sucursal
   const sheetName = clientData.provincia ? clientData.provincia.substring(0, 30) : 'Hoja Pedido';
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  return wb;
+}
 
-  // Generar nombre del archivo: OC_(ruc)_(provincia)_ddmmyy
-  const now = new Date();
-  const day = String(now.getDate()).padStart(2, '0');
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const year = String(now.getFullYear()).slice(-2); // Últimos 2 dígitos del año
-  const dateStr = `${day}${month}${year}`; // ddmmyy sin guiones
-  
-  // Limpiar provincia para nombre de archivo (remover espacios y caracteres especiales)
-  const provincia = (clientData.provincia || '')
-    .toLowerCase()
-    .replace(/\s+/g, '')  // Quitar espacios
-    .replace(/[^a-z0-9]/g, '');  // Solo letras y números
-  
-  // Nombre del archivo: OC_(ruc)_(provincia)_(oc_o_fecha)
-  // Ejemplo: OC_20100654025_trujillo_050326.xlsx o OC_20100654025_sin_sucursal_050326.xlsx
-  const ruc = clientData.ruc || 'sin_ruc';
-  const ocOrFecha = clientData.oc || dateStr;
-  const fileName = `OC_${ruc}_${provincia || 'sin_sucursal'}_${ocOrFecha}.xlsx`;
-
-  // Descargar archivo
-  XLSX.writeFile(wb, fileName);
+/**
+ * Genera y descarga el archivo Excel de la Hoja de Pedido
+ */
+export function generateExcel(clientData, selectedProducts) {
+  if (!selectedProducts || selectedProducts.length === 0) {
+    alert('No hay productos seleccionados para exportar');
+    return;
+  }
+  const wb = buildWorkbook(clientData, selectedProducts);
+  XLSX.writeFile(wb, buildFileName(clientData));
 }
 
 export default generateExcel;

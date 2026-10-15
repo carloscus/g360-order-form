@@ -8,19 +8,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Paleta moderna - Teal/Cyan (sofisticada y profesional)
+        // Paleta moderna - Indigo/Violeta (acento sin verde)
         primary: {
-          50: '#f0fdfa',
-          100: '#ccfbf1',
-          200: '#99f6e4',
-          300: '#5eead4',
-          400: '#2dd4bf',
-          500: '#14b8a6',
-          600: '#0d9488',
-          700: '#0f766e',
-          800: '#115e59',
-          900: '#134e4a',
-          950: '#042f2e',
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#312e81',
+          950: '#1e1b4b',
         },
         // Verde esmeralda para éxito
         success: {
@@ -77,10 +77,10 @@ export default {
         },
         // Colores corporativos personalizados
         corporate: {
-          light: '#f0fdfa',
-          DEFAULT: '#0d9488',
-          dark: '#0f766e',
-          accent: '#06b6d4',
+          light: '#eef2ff',
+          DEFAULT: '#4f46e5',
+          dark: '#4338ca',
+          accent: '#8b5cf6',
         }
       },
       boxShadow: {
@@ -88,8 +88,8 @@ export default {
         'glass-lg': '0 8px 32px 0 rgba(31, 38, 135, 0.15)',
         'soft': '0 4px 20px rgba(0, 0, 0, 0.08)',
         'soft-lg': '0 10px 40px rgba(0, 0, 0, 0.12)',
-        'glow': '0 0 20px rgba(20, 184, 166, 0.3)',
-        'glow-lg': '0 0 40px rgba(20, 184, 166, 0.4)',
+        'glow': '0 0 20px rgba(99, 102, 241, 0.35)',
+        'glow-lg': '0 0 40px rgba(99, 102, 241, 0.45)',
       },
       backdropBlur: {
         'xs': '2px',

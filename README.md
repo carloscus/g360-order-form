@@ -1,13 +1,12 @@
-# 📋 CIPSA OrderX v2.1
+# 🛒 CIPSA OrderX v3.0.0 — Tienda Virtual
 
-Sistema de gestión de hojas de pedido para fuerza de ventas en el ecosistema G360. Optimizado para móvil y desktop con navegación tipo app, sincronización de stock y catálogo de productos.
+> Tienda virtual de pedidos para fuerza de ventas CIPSA: catálogo y stock en vivo, búsqueda de clientes y generación de Hoja de Pedido. Forma parte de la familia de microherramientas G360.
 
-![Versión](https://img.shields.io/badge/version-2.1-blue)
+![Versión](https://img.shields.io/badge/version-3.0.0--tienda-blue)
 ![React](https://img.shields.io/badge/React-18-61DAFB)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF)
 ![Tailwind](https://img.shields.io/badge/Tailwind-3-38B2AC)
 ![G360](https://img.shields.io/badge/G360-Ecosystem-0d9488)
-![G360 Skill](https://img.shields.io/badge/G360-Skill-22c55e)
 ![Status](https://img.shields.io/badge/status-production-green)
 
 ---
@@ -15,12 +14,12 @@ Sistema de gestión de hojas de pedido para fuerza de ventas en el ecosistema G3
 ## 📑 Tabla de Contenidos
 
 - [Características Principales](#-características-principales)
-- [Novedades v1.3.0](#-novedades-v130)
+- [Novedades v3.0.0](#-novedades-v300)
 - [Estructura del Proyecto](#-estructura-del-proyecto)
 - [Instalación y Uso](#️-instalación-y-uso)
-- [Configuración del Catálogo](#-configuración-del-catálogo)
+- [Fuentes de Datos (APIs)](#-fuentes-de-datos-apis)
 - [Sincronización de Stock](#-sincronización-de-stock)
-- [Guía de Uso](#-guía-de-uso)
+- [Guía de Uso (Flujo de Tienda)](#-guía-de-uso-flujo-de-tienda)
 - [Formato de Exportación Excel](#-formato-de-exportación-excel)
 - [Paleta de Colores](#-paleta-de-colores)
 - [Arquitectura](#️-arquitectura)
@@ -32,51 +31,20 @@ Sistema de gestión de hojas de pedido para fuerza de ventas en el ecosistema G3
 
 ---
 
-## 🌐 Ecosistema G360
+## Familia G360
 
-Este proyecto forma parte del **ecosistema G360**, un conjunto de herramientas y aplicaciones para gestión empresarial. Implementa los lineamientos de marca G360 y utiliza el Glosario de Componentes para asegurar consistencia en el naming y estructura.
+Este proyecto forma parte de la familia de microherramientas **G360** para apoyo CRM y gestión de datos en escritorio, enfocadas en áreas como ventas, finanzas y logística.
 
-### 🔗 Proyectos Relacionados
-- **g360-order-xlsx**: Generador de hojas de pedido en formato Excel
-- **g360-portfolio**: Sitio web de presentación del ecosistema
-- **G360 Assets**: Librerías compartidas y templates base
+### Herramientas Relacionadas
+- **[g360-cli](https://github.com/carloscus/g360-cli)**: Bootstrap de proyectos G360
+- **[g360-signature](https://github.com/carloscus/g360-signature)**: Web component de branding G360
+- **[g360-order-xlsx](https://github.com/carloscus/g360-order-xlsx)**: Generador de hojas de pedido en formato Excel
 
-### 📚 Glosario de Componentes
-Sigue las convenciones definidas en `g360-assets/GLOSARIO_COMPONENTES.md`:
+### Glosario de Componentes
+Sigue las convenciones del proyecto:
 - Componentes: PascalCase (ej: `ClientDataModal`)
 - Clases CSS: Kebab-case (ej: `data-card`)
 - Props: camelCase (ej: `onChange`)
-
-### ⚙️ G360 Skill System
-El proyecto utiliza el **G360 Skill System** para configuración unificada del cliente:
-
-```javascript
-// src/core/g360-skill.js
-import { getClientSkill } from '@assets/engine/g360-skill-client.js';
-
-const baseClientSkill = getClientSkill('mobile');
-
-export const G360_CONFIG = {
-  ...baseClientSkill,
-  branding: {
-    clientName: 'CIPSA',
-    appTitle: 'CIPSA OrderX v2.0',
-    clientLogoFile: './logo-cipsa.svg',
-    clientFavicon: './favicon.svg'
-  }
-};
-```
-
-**Características del Skill System:**
-- Configuración centralizada de branding (logo, favicon, nombre)
-- Soporte multi-plataforma (mobile, desktop)
-- Herencia de configuración base del ecosistema G360
-- Inyección automática en `window.G360_CONFIG`
-
-**Archivos relacionados:**
-- `src/core/g360-skill.js` - Configuración del skill para CIPSA
-- `g360-assets/engine/g360-skill-client.js` - Skill base del ecosistema
-- `g360-assets/engine/g360-theme.css` - Estilos del tema G360
 
 ---
 
@@ -89,47 +57,48 @@ export const G360_CONFIG = {
 - **Glassmorphism**: Diseño moderno con efectos de transparencia
 
 ### 🔄 Gestión de Productos
-- **Búsqueda por Código/Nombre/EAN**: Búsqueda rápida y flexible
-- **Categorías Dinámicas**: VINIBALL, VINIFAN, REPRESENTADAS (desde JSON)
-- **Tooltip en Nombre**: Al pasar el cursor muestra nombre completo
-- **Badge de Agotados**: Productos sin stock marcados visualmente
+- **Búsqueda por Código/Nombre/EAN**: Universo completo (incluye sin catálogo y descontinuados, con badge visible)
+- **Categorías Fijas**: Chips Viniball, Vinifan y Representadas (producto vendible de cada línea)
+- **Stock en Vivo (almacén VES)**: Semáforo por producto — AGOTADO / BAJO (<10 bx) / OK
+- **Detalle de Stock**: Toca el nombre del producto para revisar stock VES, cajas disponibles, box y precio
 - **Equivalencias Dinámicas**: Conversión automática Unidades ↔ Cajas
-- **Validación de Stock**: Advertencias antes de agregar al carrito
-- **Confirmación de Agotado**: Al agregar producto sin stock
+- **Paginador con Salto**: Números de página con elipsis + primera/última
 - **Orden de Ingreso**: Numeración secuencial para cotejo con listas manuales
+
+### 🧑‍💼 Clientes (Supabase)
+- **Búsqueda de Clientes**: Por código exacto o parcial (RUC / código / nombre) contra la tabla `ventas` del ERP replicado
+- **Autocompletado**: Nombre, RUC y vendedor se completan al seleccionar el cliente
+- **Cliente en Atención**: Chip visible en catálogo y carrito durante todo el flujo
+
+### 🛒 Carrito de Compra
+- **Drawer Lateral**: Botón flotante 🛒 con contador; revisa y ajusta cantidades sin salir del catálogo
+- **Persistencia**: Carrito y cliente guardados automáticamente en localStorage
+- **Recuperación de Pedidos**: Importar pedidos Excel previamente exportados (coteja contra el catálogo en vivo)
 
 ### 💾 Persistencia y Sincronización
 - **localStorage**: Carrito y datos de cliente persistidos automáticamente
-- **Recuperación de Pedidos**: Cargar pedidos Excel previamente exportados
-- **Modo Offline**: Funciona sin conexión después de la primera carga
+- **Cache de Datos**: Catálogo/stock cacheado (memoria → sesión → local, TTL 5 min / 7 días)
 
 ### 📤 Exportación y Carga XLSX
-- **Exportar a Excel**: Archivo formato estándar con datos del cliente
+- **Exportar a Excel**: Hoja de Pedido con datos del cliente (RUC, OC, SKU, cantidad, precio, ID cliente, vendedor)
+- **Compartir**: Descarga, WhatsApp, Email o Web Share API nativa
 - **Cargar XLSX**: Importar pedidos guardados previamente
 
 ---
 
-## 🆕 Novedades v2.1
+## 🆕 Novedades v3.0.0 (Tienda Virtual)
 
 | Feature | Descripción |
 |---------|-------------|
-| **Modal de Producto Compacto** | Click en nombre muestra SKU, nombre, Box y Stock |
-| **Colores Unificados** | Variables CSS en ClientDataModal y Tooltip |
-| **Accesibilidad ARIA** | Atributos role, aria-label, aria-modal en componentes |
-| **Input Optimizado** | Spinners nativos eliminados, solo botones +/- |
-| **Cierre por Click Fuera** | Modal se cierra al click fuera del área |
-
-## 🆕 Novedades v1.3.0
-
-| Feature | Descripción |
-|---------|-------------|
-| **React Router v7** | Navegación SPA multi-página |
-| **Context API** | Estado global compartido (carrito, tema, cliente) |
-| **Navegación Móvil** | Barra inferior fija estilo app nativa |
-| **Sidebar PC** | Navegación lateral en pantallas grandes |
-| **Carga XLSX** | Importar pedidos desde archivos Excel |
-| **Tema Moderno** | Paleta Teal/Cyan con glassmorphism |
-| **Nueva Arquitectura** | Componentes, Context, Pages, Utils separados |
+| **Catálogo en Vivo** | Precio base referencial + stock real del almacén VES desde la Stock API (Render) |
+| **Flujo de Tienda** | Cargar cliente → revisar stock → buscar/seleccionar productos → 🛒 → Hoja de Pedido |
+| **Carrito Drawer** | Panel lateral deslizante con items, cantidades y total referencial |
+| **Búsqueda de Clientes** | Supabase PostgREST timeout-safe: código exacto → RUC/DNI completo → prefijo de nombre, vendedor autocompletado |
+| **Detalle de Stock** | Modal por producto con stock VES, cajas disponibles y estado |
+| **Categorías Fijas** | Chips Viniball / Vinifan / Representadas; la pestaña Búsqueda abarca el universo completo (~2.100 SKUs, incl. sin catálogo y descontinuados con badge) |
+| **Paginador con Salto** | Números de página con elipsis + botones primera/anterior/siguiente/última |
+| **Importador XLSX** | Reconstruye el carrito cotejando SKUs contra el catálogo en vivo |
+| **Export con Resumen** | Contrato de 8 columnas + filas de totales al pie (unidades, cajas, total referencial, fecha); totales también en mensajes de WhatsApp/Email |
 
 ---
 
@@ -146,69 +115,56 @@ g360-order-form/
 │
 ├── 📁 .github/
 │   └── 📁 workflows/
-│       ├── 📄 update-stock.yml  # GitHub Actions para stock
-│       └── 📄 sync-stock.yml    # GitHub Actions para sincronización
-│
-├── 📁 g360-assets/              # Assets del ecosistema G360
-│   └── 📁 engine/
-│       ├── 📄 g360-skill-client.js  # Skill base del ecosistema
-│       ├── 📄 g360-theme.css        # Estilos del tema G360
-│       └── 📁 components/
-│           └── 📄 G360DragModal.jsx # Modal arrastrable G360
+│       └── 📄 update-stock.yml  # GitHub Actions para stock
 │
 ├── 📁 public/                    # Archivos estáticos
-│   ├── 📄 catalogo_productos.json # Catálogo de productos (fuente oficial)
-│   ├── 📄 stock_data.json       # Datos de stock (generado por GitHub Actions)
-│   ├── 📄 favicon.svg           # Icono de la app
-│   ├── 📄 logo-cipsa.svg        # Logo de CIPSA
-│   └── 📄 404.html              # Página 404 para GitHub Pages
+│   ├── 📄 productos_local.json  # Catálogo de productos
+│   ├── 📄 stock_data.json       # Datos de stock (generado)
+│   └── 📄 favicon.svg          # Icono de la app
 │
 ├── 📁 scripts/
-│   ├── 📄 download-stock.js     # Script de sincronización
-│   ├── 📄 setup-branch-protection.js  # Configurar protección de ramas
-│   └── 📄 setup-gh-pages-protection.js # Configurar protección gh-pages
+│   └── 📄 download-stock.js     # Script de sincronización
 │
 ├── 📁 stock-api/                 # API local opcional
 │   ├── 📄 server.js
 │   └── 📄 package.json
 │
 ├── 📁 docs/
-│   ├── 📄 MANUAL_USUARIO.md     # Manual de usuario
-│   └── 📄 PROTEGER_REPO.md      # Guía de protección del repo
+│   └── 📄 MANUAL_USUARIO.md     # Manual de usuario
 │
-└── 📁 src/                       # Código fuente
+└── � src/                       # Código fuente
     ├── 📄 main.jsx              # Punto de entrada React
-    ├── 📄 App.jsx               # Componente principal + Rutas
-    ├── 📄 index.css             # Estilos globales + CSS variables
+    ├── 📄 App.jsx              # Componente principal + Rutas
+    ├── 📄 index.css            # Estilos globales + CSS variables
     │
-    ├── 📁 core/                 # Configuración G360
-    │   └── 📄 g360-skill.js     # Skill configurado para CIPSA
+    ├── 📁 components/          # Componentes reutilizables
+    │   ├── 📄 ClientDataModal.jsx  # Modal datos del cliente + búsqueda Supabase
+    │   ├── 📄 CartDrawer.jsx   # Carrito deslizante (🛒)
+    │   ├── 📄 Paginador.jsx    # Paginación con salto de páginas
+    │   └── 📄 Tooltip.jsx      # Tooltip informativo
     │
-    ├── 📁 components/           # Componentes reutilizables
-    │   ├── 📄 ClientDataModal.jsx  # Modal datos del cliente
-    │   ├── 📄 DocumentInput.jsx # Input de documentos
-    │   └── 📄 Tooltip.jsx       # Tooltip informativo
+    ├── 📁 context/             # Estado global
+    │   └── 📄 AppContext.jsx   # Context API (carrito, tema, cliente)
     │
-    ├── 📁 context/              # Estado global
-    │   └── 📄 AppContext.jsx    # Context API (carrito, tema, cliente)
-    │
-    ├── 📁 pages/                # Páginas principales
-    │   ├── 📄 Layout.jsx        # Layout con navegación
-    │   ├── 📄 CatalogoPage.jsx  # Catálogo y búsqueda
-    │   └── 📄 OrdenPage.jsx     # Resumen y exportación
+    ├── 📁 pages/               # Páginas principales
+    │   ├── 📄 Layout.jsx       # Layout, nav, frescura de stock, import XLSX
+    │   ├── 📄 CatalogoPage.jsx # Catálogo en vivo + flujo de tienda
+    │   └── 📄 OrdenPage.jsx    # Hoja de Pedido: resumen y exportación
     │
     ├── 📁 hooks/
-    │   └── 📄 useDebounce.js    # Hook de debounce
+    │   ├── 📄 useDebounce.js   # Hook de debounce
+    │   └── 📄 useStockCatalog.js # Hook del catálogo/stock en vivo
     │
     ├── 📁 services/
-    │   └── 📄 stockService.js   # Servicios de stock
+    │   ├── 📄 stockApi.js      # Stock API Render (catálogo, stock VES, cache, probe)
+    │   ├── 📄 supabaseRest.js  # Cliente PostgREST mínimo (fetch directo)
+    │   ├── 📄 clientesService.js # Búsqueda de clientes (tabla ventas)
+    │   └── 📄 stockService.js  # (legacy, sin uso)
     │
     └── 📁 utils/
-        ├── 📄 formatters.js     # Formateadores de datos
-        ├── 📄 xlsxGenerator.js  # Generador de Excel
-        ├── 📄 xlsxLoader.js     # Loader de archivos XLSX
-        ├── 📄 xlsxShare.js      # Utilidades para compartir
-        └── 📄 baseUrl.js        # Configuración de URL base
+        ├── 📄 formatters.js    # Formateadores de datos
+        ├── 📄 xlsxGenerator.js # Generador de Excel
+        └── 📄 xlsxLoader.js    # Loader de archivos XLSX
 ```
 
 ---
@@ -241,158 +197,124 @@ npm run build
 
 ---
 
-## 📦 Configuración del Catálogo
+## 🗄️ Fuentes de Datos (APIs)
 
-### Ubicación
-El archivo **`catalogo_productos.json`** debe estar en la carpeta **`public/`**:
+### Stock API (Render) — catálogo, precio y stock en vivo
 
 ```
-public/
-└── catalogo_productos.json
+GET https://g360-stock-api.onrender.com/api/v1/stock
+Header: X-API-Key: cipsa2026 (solo lectura)
 ```
 
-### Estructura del JSON
+Respuesta (por item, transformada en `src/services/stockApi.js`):
 
-```json
-[
-  {
-    "codigo": "03290",
-    "descripcion": "FOLDER N VINIFAN DOBLE TAPA OFICIO CELESTE GUSANO",
-    "uni_caja": 50,
-    "precio": 5.14,
-    "ean": "7751832032908",
-    "linea": "OFICIO",
-    "stock_referencial": 100,
-    "orden": 1
-  }
-]
-```
-
-### Mapeo de Campos
-
-El sistema acepta múltiples nombres de campo y los normaliza automáticamente:
-
-### Estructura del JSON (catalogo_productos.json)
-
-```json
-{
-  "metadata": {
-    "version": "2.0.0",
-    "generated_at": "24/03/2026 20:28:21",
-    "total_productos": 1088
-  },
-  "productos": [
-    {
-      "orden": 1,
-      "sku": "016763",
-      "nombre": "FUTBOL PU FUTURE #5",
-      "ean13": "",
-      "categoria": "VINIBALL",
-      "linea": "PELOTAS",
-      "peso_kg": 0.4,
-      "un_bx": 18,
-      "precio_lista": 70.0,
-      "precio_final": 70.0,
-      "es_remate": false
-    }
-  ]
-}
-```
-
-### Mapeo de Campos
-
-| Campo en JSON | Normalizado a | Descripción |
-|---------------|---------------|-------------|
-| `sku` | `codigo` | Código del producto |
-| `nombre` | `nombre` | Nombre del producto |
+| Campo API | Normalizado a | Descripción |
+|-----------|---------------|-------------|
+| `sku` | `codigo` | Código de producto |
+| `descripcion` / `nombre_corto` | `nombre` | Nombre del producto |
 | `un_bx` | `bxSize` | Unidades por caja/bulto |
-| `precio_final` / `precio_lista` | `precioLista` | Precio de lista (sin IGV) |
-| `ean13` | `ean` | Código de barras |
-| `categoria` | `categoria` | Categoría (VINIBALL, VINIFAN, REPRESENTADAS) |
-| `linea` | `linea` | Línea de producto |
-| `peso_kg` | `pesoUm` | Peso en KG |
-| `es_remate` | `esRemate` | Producto en oferta |
+| `precio` / `precio_lista` | `precioLista` | Precio base referencial (sin IGV) |
+| `peso_kg` | `pesoUm` | Peso unitario |
+| `ean13` / `ean14` | `ean` / `ean14` | Códigos de barras |
+| `linea` / `categoria` | `linea` / `categoria` | Línea y categoría (categorías dinámicas) |
+| `almacenes[VES].disponible` | `stock` | **Disponible de venta = almacén VES exacto** (129/40/121/122: informativos) |
+| `estado_linea` / `sin_catalogo` / `descontinuado` | filtros | Solo se venden productos del catálogo maestro |
+| `orden` | `orden` | Orden del catálogo maestro |
+
+Regla de negocio (heredada de g360-stock-reporter): `un_bx > 1` → venta en cajas; estado de stock: AGOTADO (0), BAJO (<10 bx), OK (≥10 bx).
+
+### Supabase PostgREST — búsqueda de clientes
+
+```
+GET {VITE_SUPABASE_URL}/rest/v1/ventas
+  ?select=id_cliente,doc_cliente,nom_cliente,id_vendedor,nom_vendedor
+  &id_cliente=eq.00056101&limit=1              # 1) código exacto (padded a 8, indexado)
+  &doc_cliente=eq.20601024714&limit=10          # 2) RUC/DNI completo (rápido)
+  &nom_cliente=ilike.MULTI*&limit=10            # 3) prefijo de nombre (indexado)
+Headers: apikey + Authorization: Bearer {anon key} (solo lectura)
+```
+
+- `id_cliente` canónico: 8 dígitos con ceros (`56101` → `00056101`); para display se recortan los ceros
+- El vendedor (`nom_vendedor`) viaja embebido en la fila de `ventas` y se autocompleta al elegir el cliente
+- **Semántica de búsqueda**: código completo, RUC/DNI completo o inicio del nombre. La búsqueda parcial (`%contains%`) hace full-scan sobre `ventas` y excede el statement_timeout de Supabase (500/57014) — por eso el servicio es timeout-safe con las 3 estrategias indexadas
+- Implementación: `src/services/clientesService.js` + `src/services/supabaseRest.js` (fetch directo, sin supabase-js)
+
+### Variables de Entorno
+
+Crear `.env.local` (dev) o configurar secretos en GitHub Actions (prod). Ver `.env.example`:
+
+```
+VITE_SUPABASE_URL=https://<proyecto>.supabase.co
+VITE_SUPABASE_ANON_KEY=<anon key solo lectura>
+VITE_STOCK_API_URL=https://g360-stock-api.onrender.com/api/v1/stock
+VITE_STOCK_API_KEY=cipsa2026
+```
 
 ---
 
 ## 🔄 Sincronización de Stock
 
-### Flujo con Pull Request (Recomendado)
+### Flujo actual (API en vivo)
 
 ```
-┌─────────────────────┐
-│  GitHub Actions     │
-│  (update-stock)     │
-└────────┬────────────┘
-         │
+┌──────────────────────────┐
+│  Stock API (Render)      │
+│  g360-stock-api          │
+│  refresca ERP ~15 min    │
+└────────┬─────────────────┘
+         │ GET /api/v1/stock (X-API-Key)
          ▼
-┌─────────────────────┐
-│  Descarga stock     │
-│  desde appweb       │
-└────────┬────────────┘
-         │
+┌──────────────────────────┐
+│  stockApi.js             │
+│  transform + cache 3 capas│ ──► memoria / sessionStorage (5 min) / localStorage (7 días)
+└────────┬─────────────────┘
+         │ pub/sub (useSyncExternalStore)
          ▼
-┌─────────────────────┐
-│  Crea rama          │ ──► update/stock-YYYYMMDD-HHMMSS
-│  temporal           │
-└────────┬────────────┘
-         │
-         ▼
-┌─────────────────────┐
-│  Crea Pull Request │ ──► Revisión requerida
-│  a main             │
-└────────┬────────────┘
-         │
-         ▼
-┌─────────────────────┐
-│  Merge a main       │ ──► Aprobación manual
-└────────┬────────────┘
-         │
-         ▼
-┌─────────────────────┐
-│  Sync a gh-pages   │ ──► Producción
-└─────────────────────┘
+┌──────────────────────────┐
+│  UI                      │
+│  badge frescura 🟢/🟡/🔵 │ ──► probe ?limit=1 cada 10 min + keep-alive /health cada 5 min
+└──────────────────────────┘
 ```
 
-**Este flujo es el más seguro porque:**
-- ✅ Todo cambio pasa por revisión (Pull Request)
-- ✅ Requiere aprobación manual para hacer merge
-- ✅ gh-pages se actualiza automáticamente después del merge
+- **Badge de frescura** en el header: 🟢 en vivo / 🟡 cache local / 🔵 cargando (cold start Render ~30-90 s) / 🔴 sin conexión
+- Fuera de la ventana operativa Lima (Lun-Sáb 07:00-22:59) no se hace polling en background
+- Botón "Sincronizar" fuerza un refetch completo
+
+### Workflow `update-stock.yml` (DEPRECATED)
+
+El flujo horario que descargaba `stock_data.json` desde appweb y creaba PRs quedó obsoleto: la app ya no lee esos JSON (`productos_local.json` / `stock_data.json` permanecen en `public/` solo como legacy). Puede deshabilitarse desde GitHub Actions sin afectar la tienda.
 
 ---
 
-## 💡 Guía de Uso
+## 💡 Guía de Uso (Flujo de Tienda)
+
+### Flujo principal
+
+```
+① Cargar Cliente ──► ② Revisar Stock ──► ③ Buscar/Seleccionar ──► ④ 🛒 ──► ⑤ Hoja de Pedido
+```
+
+**① Cargar Cliente** — Banner "Paso 1" en el catálogo (o botón 🛒 → "Cargar Cliente"). Busca por código, RUC o nombre; al seleccionar se autocompletan nombre, RUC y vendedor.
+
+**② Revisar Stock** — Cada tarjeta muestra el semáforo del almacén VES (AGOTADO / BAJO / OK). Toca el nombre del producto para ver stock, cajas disponibles, box y precio.
+
+**③ Buscar/Seleccionar Productos** — Buscador por SKU/nombre/EAN + categorías dinámicas. Configura cantidad con el stepper o "+1 Box".
+
+**④ Carrito 🛒** — Botón flotante con contador. El drawer muestra items, cantidades editables y total referencial; incluye el chip del cliente en atención.
+
+**⑤ Hoja de Pedido** — "Generar Hoja de Pedido" → resumen con total, exportar a Excel, compartir por WhatsApp/Email o descargar.
 
 ### Navegación
 
 | Acceso | Descripción |
 |--------|-------------|
-| **Inicio** | Catálogo de productos con búsqueda |
-| **Catálogo** | Enlace externo al catálogo online |
-| **Cargar** | Importar pedido desde archivo Excel |
-| **Actualizar** | Recargar catálogos y datos |
-| **Cliente** | Datos del cliente (RUC, nombre, OC, dirección) |
-
-### Flujo de Trabajo
-
-1. **Ingresar Datos del Cliente**
-   - RUC (11 dígitos) o DNI (8 dígitos) - Obligatorio para exportar
-   - Nombre del cliente, OC/Referencia, Provincia, Dirección, Vendedor
-
-2. **Buscar y Agregar Productos**
-   - Escribir código, nombre o EAN en el buscador
-   - Seleccionar categoría (Búsqueda, VINIBALL, VINIFAN, REPRESENTADAS)
-   - Al hacer click en búsqueda, cambia automáticamente a modo búsqueda
-   - Configurar cantidad y agregar al carrito
-
-3. **Revisar Orden**
-   - Ver resumen de productos seleccionados
-   - Modificar cantidades o eliminar productos
-   - Validar datos del cliente
-
-4. **Exportar**
-   - Hacer clic en "Descargar OC"
-   - Archivo Excel: `OC_{ruc}_{provincia}_{oc}.xlsx`
+| **Inicio** | Catálogo de productos con búsqueda y flujo de tienda |
+| **Catálogo** | Enlace externo al catálogo online (FlipHTML5) |
+| **Cargar** | Importar pedido desde archivo Excel (reconstruye el carrito) |
+| **Sincro** | Refrescar catálogo/stock desde la Stock API |
+| **Cliente** | Datos del cliente + búsqueda Supabase |
+| **Orden** | Hoja de Pedido: resumen y exportación |
+| **🛒 (flotante)** | Carrito drawer en cualquier página |
 
 ---
 
@@ -404,8 +326,14 @@ El sistema acepta múltiples nombres de campo y los normaliza automáticamente:
 | OC | Orden de compra | 280226 |
 | SKU | Código de producto | 03290 |
 | CANTIDAD | Cantidad en unidades | 100.00 |
-| PRECIO | Precio de lista (sin IGV) | 5.14 |
+| PRECIO | Precio base referencial (sin IGV) | 5.14 |
 | OBSERVACIONES | Notas del producto | Entregar en tienda |
+| ID_CLIENTE | Código canónico del cliente (v3) | 00056101 |
+| VENDEDOR | Vendedor autocompletado (v3) | MILCA SARAY REYES BALLENA |
+
+**Nota:** las columnas ID_CLIENTE y VENDEDOR se agregan al final (G, H); el contrato original de 6 columnas (A-F) se mantiene para el proceso downstream. El importador acepta ambos formatos.
+
+**Filas de resumen al pie** (sin SKU, el importador las saltea): unidades totales, cajas, total referencial, nota de precios y fecha de generación. Los mensajes de WhatsApp/Email también incluyen productos, unidades y total.
 
 **Nombre del archivo:** `OC_20456127917_trujillo_280226.xlsx`
 **Nombre de pestaña:** Provincia (ej: "Trujillo")
@@ -414,19 +342,26 @@ El sistema acepta múltiples nombres de campo y los normaliza automáticamente:
 
 ## 🎨 Paleta de Colores
 
+Paleta **moderna Indigo/Violeta** (variante custom del design system G360, sin verde):
+
 ### Modo Claro
 - **Fondo**: `#f8fafc` (slate-50)
 - **Cards**: `#ffffff` con glassmorphism
-- **Primario**: `#0d9488` (teal-600)
-- **Acento**: `#06b6d4` (cyan-500)
+- **Primario (acento)**: `#4f46e5` (indigo-600)
+- **Acento secundario**: `#8b5cf6` (violeta-500)
 - **Texto**: `#0f172a` (slate-900)
 
 ### Modo Oscuro
-- **Fondo**: `#020617` (slate-950)
-- **Cards**: `#0f172a` con glassmorphism
-- **Primario**: `#14b8a6` (teal-500)
-- **Acento**: `#22d3ee` (cyan-400)
-- **Texto**: `#f8fafc` (slate-50)
+- **Fondo**: `#0b1220` (navy G360)
+- **Cards**: `#151e2e` con glassmorphism
+- **Primario (acento)**: `#6366f1` (indigo-500)
+- **Acento secundario**: `#8b5cf6` (violeta-500)
+- **Texto**: `#f0f4f8` (slate-50)
+
+### Colores semánticos (estados, no marca)
+- **Éxito/OK**: ícono check con acento indigo
+- **Bajo stock**: ámbar `#f59e0b`
+- **Agotado/Error**: rojo `#ef4444`
 
 ---
 
@@ -472,33 +407,27 @@ AppContext
 ## 🔧 Tecnologías Utilizadas
 
 - **React 18** - Framework UI
-- **React Router v7** - Navegación SPA
+- **React Router v6** - Navegación SPA
 - **Vite 5** - Build tool y dev server
 - **Tailwind CSS 3** - Framework CSS utilitario
 - **XLSX (SheetJS)** - Generación y parsing de archivos Excel
-- **localStorage** - Persistencia de datos
-- **G360 Skill System** - Configuración unificada del cliente y branding
-- **G360 Assets Engine** - Componentes y estilos compartidos del ecosistema
+- **Supabase PostgREST** (fetch directo) - Búsqueda de clientes
+- **Stock API (Render)** - Catálogo, precio base y stock en vivo
 
 ---
 
 ## 📝 Notas Técnicas
 
 ### Versionado
-- **APP_VERSION**: `v1.3.0` (versión de la aplicación)
+- **APP_VERSION**: `v3.0.0-tienda`
 
-### Variables de Entorno (opcional)
-Crear archivo `.env`:
-```
-VITE_API_URL=https://api.ejemplo.com
-VITE_BASE_PATH=/g360-order-form
-VITE_APP_NAME=g360 Order Form
-```
+### Variables de Entorno
+Ver [Fuentes de Datos (APIs)](#-fuentes-de-datos-apis). Las credenciales son de solo lectura; en producción se inyectan vía GitHub Secrets (configuradas en `deploy-frontend.yml`).
 
 ### Límites Conocidos
-- Catálogo: ~5000 productos (optimizado con paginado)
-- Búsqueda: 30 productos por página
-- Exportación: Sin límite de productos
+- Catálogo: ~2000 SKUs del catálogo maestro (paginado de 24 por página)
+- Cold start de Render (free tier): 30-90 s al despertar; el keep-alive `/health` lo mitiga en horario operativo
+- Búsqueda de clientes: solo lectura sobre la tabla `ventas` (sin RLS por usuario — mismo modelo que g360-ventas-pulse fase actual)
 
 ---
 
@@ -508,10 +437,12 @@ VITE_APP_NAME=g360 Order Form
 
 | Problema | Causa Posible | Solución |
 |----------|---------------|----------|
-| No carga el catálogo | Error de red | Recargar la página |
-| Stock no se sincroniza | Problema de red o repo | Verificar conexión y permisos |
-| Exportación falla | RUC inválido o sin productos | Verificar datos completos |
-| Pérdida de pedido | Limpieza de navegador | Recuperar desde Excel exportado |
+| No carga el catálogo | Render dormido (cold start) o sin conexión | Esperar 30-90 s y "Reintentar"; el badge del header indica el estado |
+| Stock en 🟡 (cache local) | Sin conexión con la Stock API | Botón "Sincronizar"; los datos de cache siguen disponibles |
+| Búsqueda de clientes falla | Supabase no configurado | Verificar `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` (.env.local o secrets) |
+| Cliente no aparece en búsqueda | Código/RUC no está en `ventas` | Cargar datos manualmente en el modal de cliente |
+| Exportación falla | RUC inválido o sin productos | Verificar datos completos (modal Cliente) |
+| Pérdida de pedido | Limpieza de navegador | Recuperar desde Excel exportado (Cargar XLSX) |
 | Iconos no cargan | Sin conexión a Google Fonts | Los iconos fallback no están implementados |
 
 ---
@@ -595,17 +526,22 @@ permissions:
 
 ## 🤝 Contribución
 
-**Desarrollador**: Carlos Cusi  
-**Asistencia de código**: Kilo Code - Coding Assistant  
-**Última actualización**: 2026-03-25
-
----
+**Desarrollador**: Carlos Cusi
+**Desarrollo**: Con asistencia de herramientas de código IA (Vibe Code)
+**Última actualización**: 2026
 
 ## 📄 Licencia
 
-Proyecto privado - Uso exclusivo para fuerza de ventas.
+MIT License - ver [LICENSE](LICENSE) para más detalles.
 
 ---
 
-**Versión**: 2.1  
+**Versión**: 3.0.0-tienda
 **Estado**: ✅ Estable y listo para producción
+
+---
+**Marca**: G360
+**Isotipo**: 3 puntos verticales paralelos (gris-verde-gris) + chevron `>`
+**Autor**: Carlos Cusi
+**Desarrollo**: Con asistencia de herramientas de código IA (Vibe Code)
+**Powered by**: [g360-signature](https://github.com/carloscus/g360-signature)

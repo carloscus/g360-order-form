@@ -7,8 +7,23 @@ const http = require('http');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Habilitar CORS para permitir solicitudes desde el frontend
-app.use(cors());
+// Habilitar CORS con origen restringido al frontend desplegado
+const ALLOWED_ORIGINS = [
+  'https://carloscus1.github.io',  // GitHub Pages (case-sensitive)
+  'http://localhost:3000',
+  'http://localhost:5174',
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 // Función para descargar archivo desde una URL
@@ -45,6 +60,57 @@ function downloadFile(url) {
     }).on('error', reject);
   });
 }
+
+// Endpoint: Obtener stock unificado en formato enriquecido (compatible con frontend)
+app.get('/api/v1/stock', async (req, res) => {
+  try {
+    const { key } = req.query;
+    if (key !== 'cipsa2026') {
+      return res.status(401).json({ success: false, error: 'Invalid API key' });
+    }
+
+    console.log('Solicitando datos de stock desde appweb...');
+
+    const url = 'http://appweb.cipsa.com.pe:8054/AlmacenStock/DownLoadFiles?value={%22%20%22:%22%22,%22parametroX1%22:%220%22,%22parametroX2%22:%220%22}';
+    const buffer = await downloadFile(url);
+    const workbook = xlsx.read(buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const rawData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    const items = rawData
+      .filter(row => row.Column2 && row.Column2 !== 'Total' && row.Column2 !== 'TOTAL')
+      .map(row => ({
+        sku: String(row.Column2).trim(),
+        descripcion: row.Column3 || '',
+        linea: row.Column6 || '',
+        categoria: row.Column7 || '',
+        almacenes: [
+          {
+            tipo: 'venta',
+            almacen: row.Column10 || 'VES',
+            disponible: parseInt(row.Column19, 10) || 0,
+            stock: parseInt(row.Column19, 10) || 0,
+            predespacho: parseInt(row.Column17, 10) || 0,
+          }
+        ]
+      }));
+
+    console.log(`Stock procesado: ${items.length} productos`);
+
+    res.json({
+      items,
+      metadata: {
+        fecha_descarga: new Date().toISOString(),
+        total_almacenes: 1,
+        total_skus: items.length,
+        fuente: 'appweb',
+      }
+    });
+  } catch (error) {
+    console.error('Error obteniendo stock:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // Endpoint: Descargar stock desde appweb
 app.get('/api/stock/appweb', async (req, res) => {
@@ -179,6 +245,8 @@ app.get('/api/health', (req, res) => {
 app.listen(PORT, () => {
   console.log(`Stock API corriendo en http://localhost:${PORT}`);
   console.log('Endpoints disponibles:');
+  console.log(`  - GET http://localhost:${PORT}/api/v1/stock?key=cipsa2026`);
   console.log(`  - GET http://localhost:${PORT}/api/stock/appweb`);
   console.log(`  - GET http://localhost:${PORT}/api/stock/drive?url=...`);
+  console.log(`  - GET http://localhost:${PORT}/api/health`);
 });

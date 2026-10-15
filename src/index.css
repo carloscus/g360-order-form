@@ -9,8 +9,8 @@
   --g360-bg: #f8fafc;
   --g360-surface: #ffffff;
   --g360-surface-glass: rgba(255, 255, 255, 0.85);
-  --g360-accent: #00d084;
-  --g360-glow: rgba(0, 208, 132, 0.3);
+  --g360-accent: #4f46e5;
+  --g360-glow: rgba(79, 70, 229, 0.3);
   --g360-text: #0f172a;
   --g360-muted: #64748b;
   --g360-border: rgba(15, 23, 42, 0.08);
@@ -24,8 +24,8 @@
   --g360-bg: #0b1220;
   --g360-surface: #151e2e;
   --g360-surface-glass: rgba(21, 30, 46, 0.85);
-  --g360-accent: #00d084;
-  --g360-glow: rgba(0, 208, 132, 0.5);
+  --g360-accent: #6366f1;
+  --g360-glow: rgba(99, 102, 241, 0.5);
   --g360-text: #f0f4f8;
   --g360-muted: #94a3b8;
   --g360-border: rgba(255, 255, 255, 0.1);
@@ -69,7 +69,7 @@
   }
 
   .nav-item {
-    @apply flex flex-col items-center justify-center gap-1 transition-all duration-300 text-[9px] font-black uppercase tracking-widest px-4 py-2 rounded-2xl;
+    @apply flex flex-col items-center justify-center gap-0.5 transition-all duration-300 text-[9px] font-black uppercase tracking-widest px-2.5 py-2 rounded-2xl;
     color: var(--g360-muted);
   }
 
@@ -79,7 +79,7 @@
   }
 
   .nav-item span.material-symbols-outlined {
-    @apply text-2xl transition-transform duration-300;
+    @apply text-[22px] transition-transform duration-300;
   }
 
   .nav-item.active span {
@@ -92,10 +92,6 @@
     background-color: var(--g360-input-bg);
     border: 1px solid var(--g360-border);
     @apply rounded-xl transition-all;
-  }
-
-  .input-minimal {
-    @apply w-full bg-[var(--g360-input-bg)] border border-[var(--g360-border)] rounded-2xl px-5 py-4 text-sm font-bold text-[var(--g360-text)] focus:border-[var(--g360-accent)] outline-none transition-all;
   }
 
   /* Search Overlay - Fixed Dark Layer Issue */
@@ -135,4 +131,22 @@
 
 .animate-scale-in {
   animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }

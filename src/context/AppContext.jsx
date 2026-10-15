@@ -16,11 +16,8 @@ const STORAGE_KEYS = {
   CART: 'hoja_pedido_cart',
   CLIENT: 'hoja_pedido_client',
   ORDER_INDEX: 'hoja_pedido_order_index',
-  THEME: 'hoja_pedido_theme',
-  FLOATING_POS: 'hoja_pedido_floating_pos'
+  THEME: 'hoja_pedido_theme'
 };
-
-// ... (helpers de storage se mantienen igual)
 
 // Helper para cargar desde localStorage de forma segura
 const loadFromStorage = (key, defaultValue) => {
@@ -49,19 +46,20 @@ export function AppProvider({ children }) {
 
   // Estado del cliente - valores por defecto para SSR
   const [clientData, setClientData] = useState({
+    id_cliente: '',
     ruc: '',
     nombre: '',
     oc: '',
     provincia: '',
     direccion: '',
     vendedor: '',
+    id_vendedor: '',
     telefono: '',
     email: ''
   });
 
   // Estado del tema (claro/oscuro) - default a false para SSR
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [floatingPosition, setFloatingPosition] = useState(null);
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Efecto de hidratación: carga desde localStorage solo en cliente
@@ -73,18 +71,17 @@ export function AppProvider({ children }) {
     setSelectedProducts(loadFromStorage(STORAGE_KEYS.CART, {}));
     setNextOrderIndex(loadFromStorage(STORAGE_KEYS.ORDER_INDEX, 1));
     setClientData(loadFromStorage(STORAGE_KEYS.CLIENT, {
+      id_cliente: '',
       ruc: '',
       nombre: '',
       oc: '',
       provincia: '',
       direccion: '',
       vendedor: '',
+      id_vendedor: '',
       telefono: '',
       email: ''
     }));
-    
-    // Cargar posición guardada
-    setFloatingPosition(loadFromStorage(STORAGE_KEYS.FLOATING_POS, null));
 
     // Cargar tema con preferencia del sistema como fallback
     const savedTheme = loadFromStorage(STORAGE_KEYS.THEME, null);
@@ -116,16 +113,6 @@ export function AppProvider({ children }) {
 
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
-  // Listener para evento de actualización de stock
-  const [lastStockUpdate, setLastStockUpdate] = useState(null);
-  useEffect(() => {
-    const handleStockUpdate = (event) => {
-      setLastStockUpdate(event.detail);
-    };
-    window.addEventListener('stock-updated', handleStockUpdate);
-    return () => window.removeEventListener('stock-updated', handleStockUpdate);
   }, []);
 
   // Estado del modal de pedido
@@ -164,16 +151,6 @@ export function AppProvider({ children }) {
     if (!isHydrated) return; // No guardar hasta que esté hidratado
     saveToStorage(STORAGE_KEYS.ORDER_INDEX, nextOrderIndex);
   }, [nextOrderIndex, isHydrated]);
-
-  useEffect(() => {
-    if (!isHydrated) return;
-    if (floatingPosition) saveToStorage(STORAGE_KEYS.FLOATING_POS, floatingPosition);
-  }, [floatingPosition, isHydrated]);
-
-  // Función para actualizar posición
-  const updateFloatingPosition = useCallback((pos) => {
-    setFloatingPosition(pos);
-  }, []);
 
   // Agregar producto al carrito
   const addToCart = useCallback((producto, cantidad = 1) => {
@@ -311,8 +288,6 @@ export function AppProvider({ children }) {
     cartTotalValue,
     cartTotalWeight,
     isDarkMode,
-    lastStockUpdate,
-    floatingPosition,
     addToCart,
     updateCartQuantity,
     removeFromCart,
@@ -322,8 +297,7 @@ export function AppProvider({ children }) {
     setShowPedidoModal,
     isInCart,
     nextOrderIndex,
-    toggleTheme,
-    updateFloatingPosition
+    toggleTheme
   };
 
   return (

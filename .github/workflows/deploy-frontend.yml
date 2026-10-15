@@ -13,23 +13,29 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-        
-      - name: Add .nojekyll
-        run: touch dist/.nojekyll
-
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+      - run: npm ci
+      - name: Configure git identity
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+      - name: Configure git remote with token
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+      - name: Build & deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_AUTHOR_NAME: GitHub Action
+          GIT_AUTHOR_EMAIL: action@github.com
+          GIT_COMMITTER_NAME: GitHub Action
+          GIT_COMMITTER_EMAIL: action@github.com
+          # Búsqueda de clientes (Supabase PostgREST solo lectura) + Stock API Render
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_STOCK_API_URL: ${{ secrets.VITE_STOCK_API_URL }}
+          VITE_STOCK_API_KEY: ${{ secrets.VITE_STOCK_API_KEY }}
+        run: npm run deploy

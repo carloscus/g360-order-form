@@ -1,8 +1,9 @@
 import * as XLSX from 'xlsx';
-import { getFechaCompacta } from './formatters';
+import { buildWorkbook, buildFileName } from './xlsxGenerator';
 
 /**
  * Genera un archivo Excel como Blob para usarlo con Share API
+ * (misma hoja que generateExcel: builder compartido, sin drift)
  * @param {Object} clientData - Datos del cliente
  * @param {Array} selectedProducts - Productos seleccionados
  * @returns {Promise<{blob: Blob, fileName: string}>} - El Blob del archivo Excel y su nombre sugerido
@@ -12,39 +13,8 @@ export async function generateExcelBlob(clientData, selectedProducts) {
     throw new Error('No hay productos seleccionados para exportar');
   }
 
-  const wb = XLSX.utils.book_new();
-
-  const headers = ['RUC', 'OC', 'SKU', 'CANTIDAD', 'PRECIO', 'OBSERVACIONES'];
-
-  const productRows = selectedProducts.map(product => [
-    clientData.ruc || '',
-    clientData.oc || '',
-    product.codigo,
-    Number(product.cantidad).toFixed(2),
-    Number(product.precioLista).toFixed(2),
-    product.observacion || ''
-  ]);
-
-  // Agregar nota de precios referenciales
-  const disclaimerRow = ['', '', '', '', '', 'NOTA: Precios referenciales sin descuentos ni IGV. Sujeto a cotización final.'];
-
-  const data = [headers, ...productRows, [], disclaimerRow];
-  const ws = XLSX.utils.aoa_to_sheet(data);
-
-  ws['!cols'] = [
-    { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 50 },
-  ];
-
-  const sheetName = clientData.provincia ? clientData.provincia.substring(0, 30) : 'Hoja Pedido';
-  XLSX.utils.book_append_sheet(wb, ws, sheetName);
-
-  const now = new Date();
-  const dateStr = `${String(now.getDate()).padStart(2, '0')}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getFullYear()).slice(-2)}`;
-  
-  const provincia = (clientData.provincia || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const ruc = clientData.ruc || 'sin_ruc';
-  const ocOrFecha = clientData.oc || dateStr;
-  const fileName = `OC_${ruc}_${provincia || 'sin_sucursal'}_${ocOrFecha}.xlsx`;
+  const wb = buildWorkbook(clientData, selectedProducts);
+  const fileName = buildFileName(clientData);
 
   // Generar el archivo como ArrayBuffer
   const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
@@ -114,6 +84,10 @@ export async function shareViaWhatsApp(clientData, selectedProducts) {
     const downloadResult = await downloadExcel(clientData, selectedProducts);
 
     if (downloadResult.success) {
+      const { unidades, monto } = selectedProducts.reduce(
+        (acc, p) => ({ unidades: acc.unidades + (Number(p.cantidad) || 0), monto: acc.monto + (Number(p.precioLista) || 0) * (Number(p.cantidad) || 0) }),
+        { unidades: 0, monto: 0 }
+      );
       // Mostrar alerta con instrucciones
       alert(`✅ Archivo Excel descargado: ${downloadResult.fileName}\n\n📱 Abra WhatsApp y:\n1. Seleccione el contacto\n2. Haga clic en adjuntar (📎)\n3. Busque el archivo en Descargas\n4. Envío el mensaje`);
 
@@ -122,7 +96,9 @@ export async function shareViaWhatsApp(clientData, selectedProducts) {
         `📋 *PEDIDO CIPSA*\n\n` +
         `Cliente: ${clientData.nombre || 'No especificado'}\n` +
         `RUC: ${clientData.ruc || 'No especificado'}\n` +
-        `OC: ${clientData.oc || 'No especificado'}\n\n` +
+        `OC: ${clientData.oc || 'No especificado'}\n` +
+        `Productos: ${selectedProducts.length} · Unidades: ${unidades}\n` +
+        `Total referencial: S/ ${monto.toFixed(2)}\n\n` +
         `Adjunto archivo Excel con detalle del pedido.`
       );
 
@@ -145,6 +121,10 @@ export async function shareViaEmail(clientData, selectedProducts) {
     const downloadResult = await downloadExcel(clientData, selectedProducts);
 
     if (downloadResult.success) {
+      const { unidades, monto } = selectedProducts.reduce(
+        (acc, p) => ({ unidades: acc.unidades + (Number(p.cantidad) || 0), monto: acc.monto + (Number(p.precioLista) || 0) * (Number(p.cantidad) || 0) }),
+        { unidades: 0, monto: 0 }
+      );
       // Mostrar alerta con instrucciones
       alert(`✅ Archivo Excel descargado: ${downloadResult.fileName}\n\n📧 Abra su cliente de email y:\n1. Cree un nuevo mensaje\n2. Haga clic en adjuntar/archivar\n3. Busque el archivo en Descargas\n4. Complete destinatario y envíe`);
 
@@ -155,7 +135,9 @@ export async function shareViaEmail(clientData, selectedProducts) {
         `Cliente: ${clientData.nombre || 'No especificado'}\n` +
         `RUC: ${clientData.ruc || 'No especificado'}\n` +
         `OC: ${clientData.oc || 'No especificado'}\n` +
-        `Provincia: ${clientData.provincia || 'No especificado'}\n\n` +
+        `Provincia: ${clientData.provincia || 'No especificado'}\n` +
+        `Productos: ${selectedProducts.length} · Unidades: ${unidades}\n` +
+        `Total referencial: S/ ${monto.toFixed(2)}\n\n` +
         `Archivo Excel generado automáticamente.`
       );
 

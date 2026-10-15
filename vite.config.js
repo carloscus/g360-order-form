@@ -21,11 +21,32 @@ export default defineConfig(({ command }) => ({
     open: true,
     // Manejo de SPA para evitar 404 al recargar
     historyApiFallback: true,
+    // Proxy dev: evita CORS del preflight (X-API-Key) contra la Stock API de Render
+    proxy: {
+      '/api': {
+        target: 'https://g360-stock-api.onrender.com',
+        changeOrigin: true,
+        secure: true,
+        timeout: 120000
+      }
+    },
     fs: {
       allow: [
         '.',
         './g360-assets'
       ]
+    }
+  },
+  preview: {
+    port: 4173,
+    // Mismo proxy para vite preview (build local)
+    proxy: {
+      '/api': {
+        target: 'https://g360-stock-api.onrender.com',
+        changeOrigin: true,
+        secure: true,
+        timeout: 120000
+      }
     }
   }
 }))

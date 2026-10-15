@@ -42,6 +42,8 @@ export function loadExcelFile(file) {
         const idxPrecio = headers.findIndex(h => h.includes('PRECIO'));
         const idxObs = headers.findIndex(h => h.includes('OBSERVACION'));
         const idxNombre = headers.findIndex(h => h.includes('NOMBRE') || h.includes('CLIENTE') || h.includes('RAZÓN'));
+        const idxIdCliente = headers.findIndex(h => h.includes('ID_CLIENTE') || h.includes('ID CLIENTE'));
+        const idxVendedor = headers.findIndex(h => h.includes('VENDEDOR'));
         
         if (idxSKU === -1 || idxCantidad === -1) {
           reject(new Error('El archivo no tiene el formato esperado (faltan columnas SKU o CANTIDAD)'));
@@ -51,12 +53,13 @@ export function loadExcelFile(file) {
         // Extraer datos del cliente de la primera fila de datos
         const firstDataRow = jsonData[1] || [];
         const clientData = {
+          id_cliente: idxIdCliente >= 0 ? String(firstDataRow[idxIdCliente] || '').trim() : '',
           ruc: String(firstDataRow[idxRUC] || '').trim(),
           oc: String(firstDataRow[idxOC] || '').trim(),
           nombre: idxNombre >= 0 ? String(firstDataRow[idxNombre] || '').trim() : '',
           provincia: '',
           direccion: '',
-          vendedor: ''
+          vendedor: idxVendedor >= 0 ? String(firstDataRow[idxVendedor] || '').trim() : ''
         };
         
         // Extraer productos
