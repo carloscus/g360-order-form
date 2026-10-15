@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { formatMoney, getFechaCompacta, validarDocumento } from '../utils/formatters';
 import { generateExcel } from '../utils/xlsxGenerator';
-import { shareViaWhatsApp, shareViaEmail, downloadExcel } from '../utils/xlsxShare';
+import { shareViaEmail, downloadExcel } from '../utils/xlsxShare';
 import G360DragModal from '@assets/engine/components/G360DragModal';
 
 function OrdenPage() {
@@ -53,25 +53,6 @@ function OrdenPage() {
     // Cerrar otros modales antes de abrir el de exportación
     setShowClearConfirm(false);
     setShowExportConfirm(true);
-  };
-
-  const confirmShareWhatsApp = async () => {
-    setExportLoading(true);
-    let exportClientData = { ...clientData };
-    if (!clientData.oc?.trim()) exportClientData.oc = getFechaCompacta();
-
-    try {
-      const result = await shareViaWhatsApp(exportClientData, selectedProductsArray);
-
-      if (result.success) {
-        setShowExportConfirm(false);
-        if (!clientData.oc?.trim()) setClientDataAll(exportClientData);
-      }
-    } catch (err) {
-      alert('Error al compartir por WhatsApp: ' + err.message);
-    } finally {
-      setExportLoading(false);
-    }
   };
 
   const confirmShareEmail = async () => {
@@ -232,18 +213,14 @@ function OrdenPage() {
               Precios referenciales sin descuentos ni IGV.<br/>
               Cotización final por separado.
             </p>
-            <div className="grid grid-cols-2 gap-1.5 mb-3">
-              <button onClick={confirmShareWhatsApp} disabled={exportLoading} className="py-2.5 bg-[var(--g360-accent)] text-black rounded-xl font-black text-[8px] uppercase flex flex-col items-center gap-0.5 shadow-lg shadow-[var(--g360-glow)] disabled:opacity-50">
-                <span className={`material-symbols-outlined text-lg ${exportLoading ? 'animate-spin' : ''}`}>chat</span>
-                WhatsApp
-              </button>
-              <button onClick={confirmShareEmail} disabled={exportLoading} className="py-2.5 bg-[#4285F4] text-white rounded-xl font-black text-[8px] uppercase flex flex-col items-center gap-0.5 shadow-lg shadow-blue-500/20 disabled:opacity-50">
-                <span className={`material-symbols-outlined text-lg ${exportLoading ? 'animate-spin' : ''}`}>mail</span>
-                Email
-              </button>
-              <button onClick={confirmExport} disabled={exportLoading} className="col-span-2 py-3 bg-[var(--g360-surface)] text-[var(--g360-text)] border border-[var(--g360-border)] rounded-xl font-black text-[9px] uppercase flex items-center justify-center gap-2 shadow-lg disabled:opacity-50">
+            <div className="space-y-1.5 mb-3">
+              <button onClick={confirmExport} disabled={exportLoading} className="w-full py-3 bg-[var(--g360-accent)] text-black rounded-xl font-black text-[10px] uppercase flex items-center justify-center gap-2 shadow-lg shadow-[var(--g360-glow)] disabled:opacity-50">
                 <span className={`material-symbols-outlined text-xl ${exportLoading ? 'animate-spin' : ''}`}>download</span>
                 {exportLoading ? 'PROCESANDO...' : 'DESCARGAR EXCEL'}
+              </button>
+              <button onClick={confirmShareEmail} disabled={exportLoading} className="w-full py-3 bg-[#4285F4] text-white rounded-xl font-black text-[9px] uppercase flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 disabled:opacity-50">
+                <span className={`material-symbols-outlined text-lg ${exportLoading ? 'animate-spin' : ''}`}>mail</span>
+                ENVIAR POR EMAIL
               </button>
             </div>
             <button onClick={() => setShowExportConfirm(false)} className="text-[7px] text-[var(--g360-muted)] uppercase font-black tracking-widest hover:text-[var(--g360-text)] transition-colors mt-1">CANCELAR</button>

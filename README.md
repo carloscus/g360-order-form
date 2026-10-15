@@ -81,7 +81,7 @@ Sigue las convenciones del proyecto:
 
 ### 📤 Exportación y Carga XLSX
 - **Exportar a Excel**: Hoja de Pedido con datos del cliente (RUC, OC, SKU, cantidad, precio, ID cliente, vendedor)
-- **Compartir**: Descarga, WhatsApp, Email o Web Share API nativa
+- **Compartir**: Descarga directa o Email
 - **Cargar XLSX**: Importar pedidos guardados previamente
 
 ---
@@ -98,7 +98,7 @@ Sigue las convenciones del proyecto:
 | **Categorías Fijas** | Chips Viniball / Vinifan / Representadas; la pestaña Búsqueda abarca el universo completo (~2.100 SKUs, incl. sin catálogo y descontinuados con badge) |
 | **Paginador con Salto** | Números de página con elipsis + botones primera/anterior/siguiente/última |
 | **Importador XLSX** | Reconstruye el carrito cotejando SKUs contra el catálogo en vivo |
-| **Export con Resumen** | Contrato de 8 columnas + filas de totales al pie (unidades, cajas, total referencial, fecha); totales también en mensajes de WhatsApp/Email |
+| **Export con Resumen** | Contrato de 8 columnas + filas de totales al pie (unidades, cajas, total referencial, fecha); totales también en el mensaje de Email |
 
 ---
 
@@ -302,7 +302,7 @@ El flujo horario que descargaba `stock_data.json` desde appweb y creaba PRs qued
 
 **④ Carrito 🛒** — Botón flotante con contador. El drawer muestra items, cantidades editables y total referencial; incluye el chip del cliente en atención.
 
-**⑤ Hoja de Pedido** — "Generar Hoja de Pedido" → resumen con total, exportar a Excel, compartir por WhatsApp/Email o descargar.
+**⑤ Hoja de Pedido** — "Generar Hoja de Pedido" → resumen con total, exportar a Excel (descarga directa o por Email).
 
 ### Navegación
 
@@ -333,7 +333,7 @@ El flujo horario que descargaba `stock_data.json` desde appweb y creaba PRs qued
 
 **Nota:** las columnas ID_CLIENTE y VENDEDOR se agregan al final (G, H); el contrato original de 6 columnas (A-F) se mantiene para el proceso downstream. El importador acepta ambos formatos.
 
-**Filas de resumen al pie** (sin SKU, el importador las saltea): unidades totales, cajas, total referencial, nota de precios y fecha de generación. Los mensajes de WhatsApp/Email también incluyen productos, unidades y total.
+**Filas de resumen al pie** (sin SKU, el importador las saltea): unidades totales, cajas, total referencial, nota de precios y fecha de generación. El mensaje de Email también incluye productos, unidades y total.
 
 **Nombre del archivo:** `OC_20456127917_trujillo_280226.xlsx`
 **Nombre de pestaña:** Provincia (ej: "Trujillo")

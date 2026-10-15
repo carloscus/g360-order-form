@@ -76,43 +76,6 @@ export async function shareExcel(clientData, selectedProducts) {
 }
 
 /**
- * Comparte por WhatsApp (descarga + abre WhatsApp con instrucciones)
- */
-export async function shareViaWhatsApp(clientData, selectedProducts) {
-  try {
-    // Descargar el archivo automáticamente
-    const downloadResult = await downloadExcel(clientData, selectedProducts);
-
-    if (downloadResult.success) {
-      const { unidades, monto } = selectedProducts.reduce(
-        (acc, p) => ({ unidades: acc.unidades + (Number(p.cantidad) || 0), monto: acc.monto + (Number(p.precioLista) || 0) * (Number(p.cantidad) || 0) }),
-        { unidades: 0, monto: 0 }
-      );
-      // Mostrar alerta con instrucciones
-      alert(`✅ Archivo Excel descargado: ${downloadResult.fileName}\n\n📱 Abra WhatsApp y:\n1. Seleccione el contacto\n2. Haga clic en adjuntar (📎)\n3. Busque el archivo en Descargas\n4. Envío el mensaje`);
-
-      // Abrir WhatsApp con mensaje básico
-      const message = encodeURIComponent(
-        `📋 *PEDIDO CIPSA*\n\n` +
-        `Cliente: ${clientData.nombre || 'No especificado'}\n` +
-        `RUC: ${clientData.ruc || 'No especificado'}\n` +
-        `OC: ${clientData.oc || 'No especificado'}\n` +
-        `Productos: ${selectedProducts.length} · Unidades: ${unidades}\n` +
-        `Total referencial: S/ ${monto.toFixed(2)}\n\n` +
-        `Adjunto archivo Excel con detalle del pedido.`
-      );
-
-      const whatsappUrl = `https://wa.me/?text=${message}`;
-      window.open(whatsappUrl, '_blank');
-
-      return { success: true, method: 'whatsapp' };
-    }
-  } catch (error) {
-    throw new Error('Error al preparar archivo para WhatsApp: ' + error.message);
-  }
-}
-
-/**
  * Comparte por Email (descarga + abre cliente de email con instrucciones)
  */
 export async function shareViaEmail(clientData, selectedProducts) {
