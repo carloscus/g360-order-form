@@ -297,20 +297,9 @@ function Layout() {
           <span className="material-symbols-outlined">badge</span>
           <span>Cliente</span>
         </button>
-        <NavLink to="/orden" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
-          <div className="relative">
-              <span className="material-symbols-outlined">shopping_bag</span>
-              {cartCount > 0 && (
-                <span className={`absolute -top-1.5 -right-2 w-4 h-4 text-[8px] flex items-center justify-center rounded-full font-black border border-[var(--g360-bg)] ${isPathActive('/orden') ? 'bg-black text-[var(--g360-accent)]' : 'bg-red-500 text-white'}`}>
-                  {cartCount}
-                </span>
-              )}
-          </div>
-          <span>Orden</span>
-        </NavLink>
       </nav>
 
-      {/* FAB Carrito - visible salvo en /orden (ahí existe el panel flotante de acciones) */}
+      {/* FAB Carrito - único acceso al carrito en móvil (abre el drawer con badge de items) */}
       {!isPathActive('/orden') && !cartOpen && (
         <button
           onClick={() => setCartOpen(true)}

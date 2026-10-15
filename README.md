@@ -77,7 +77,7 @@ Sigue las convenciones del proyecto:
 
 ### 💾 Persistencia y Sincronización
 - **localStorage**: Carrito y datos de cliente persistidos automáticamente
-- **Cache de Datos**: Catálogo/stock cacheado (memoria → sesión → local, TTL 5 min / 7 días)
+- **Cache Offline-First**: Catálogo/stock en memoria → sesión (5 min) → **localStorage sin expiración**. Con conexión refresca automáticamente (evento `online`, probe cada 10 min); sin conexión **sigue operando con los últimos datos** (badge 🟡 muestra su edad)
 
 ### 📤 Exportación y Carga XLSX
 - **Exportar a Excel**: Hoja de Pedido con datos del cliente (RUC, OC, SKU, cantidad, precio, ID cliente, vendedor)
@@ -313,8 +313,7 @@ El flujo horario que descargaba `stock_data.json` desde appweb y creaba PRs qued
 | **Cargar** | Importar pedido desde archivo Excel (reconstruye el carrito) |
 | **Sincro** | Refrescar catálogo/stock desde la Stock API |
 | **Cliente** | Datos del cliente + búsqueda Supabase |
-| **Orden** | Hoja de Pedido: resumen y exportación |
-| **🛒 (flotante)** | Carrito drawer en cualquier página |
+| **🛒 (flotante)** | Único acceso al carrito: drawer con items y CTA "Generar Hoja de Pedido" (→ orden/export) |
 
 ---
 
