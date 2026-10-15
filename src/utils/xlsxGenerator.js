@@ -52,6 +52,7 @@ export function calcularTotales(selectedProducts) {
 
 /**
  * Filas de resumen al pie (sin SKU → el importador las saltea)
+ * Signature G360: isotipo = 3 puntos verticales paralelos (⋮) + chevron (>)
  */
 export function buildResumenRows(selectedProducts) {
   const { unidades, cajas, monto } = calcularTotales(selectedProducts);
@@ -62,7 +63,8 @@ export function buildResumenRows(selectedProducts) {
     ['', '', '', '', '', `UNIDADES TOTALES: ${unidades} · CAJAS: ${cajas}`],
     ['', '', '', '', '', `TOTAL REFERENCIAL: S/ ${monto.toFixed(2)}`],
     ['', '', '', '', '', 'NOTA: Precios referenciales sin descuentos ni IGV. Sujeto a cotización final.'],
-    ['', '', '', '', '', `Generado: ${fecha} · CIPSA OrderX`]
+    ['', '', '', '', '', `Generado: ${fecha} · CIPSA OrderX`],
+    ['', '', '', '', '', 'Autor: CCUSI · ⋮> Powered by G360']
   ];
 }
 
@@ -83,6 +85,15 @@ export function buildFileName(clientData) {
  */
 export function buildWorkbook(clientData, selectedProducts) {
   const wb = XLSX.utils.book_new();
+  // Metadatos del archivo (Propiedades del documento en Excel)
+  wb.Props = {
+    Title: `Hoja de Pedido${clientData.nombre ? ' - ' + clientData.nombre : ''}`,
+    Subject: 'Pedido CIPSA',
+    Author: 'CCUSI',
+    Company: 'G360',
+    LastModifiedBy: 'CIPSA OrderX',
+    CreatedDate: new Date()
+  };
   const data = [
     PEDIDO_HEADERS,
     ...buildProductRows(clientData, selectedProducts),

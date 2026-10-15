@@ -43,8 +43,14 @@
 
   </body>
 
-   <!-- Signature G360 -->
-   <div style="position: fixed; bottom: 20px; right: 20px; font-size: 10px; color: var(--g360-muted); z-index: 100;">
-       Powered by <span style="color: var(--g360-accent); font-weight: bold;">G360</span> | CCUSI 2026
+   <!-- Signature G360: isotipo = 3 puntos verticales paralelos (gris-acento-gris) + chevron -->
+   <div style="position: fixed; bottom: 20px; right: 20px; font-size: 10px; color: var(--g360-muted); z-index: 100; display: flex; align-items: center; gap: 6px;">
+       <span aria-hidden="true" style="display: inline-flex; flex-direction: column; gap: 2px;">
+           <i style="width: 3px; height: 3px; border-radius: 50%; background: var(--g360-muted); display: block;"></i>
+           <i style="width: 3px; height: 3px; border-radius: 50%; background: var(--g360-accent); display: block;"></i>
+           <i style="width: 3px; height: 3px; border-radius: 50%; background: var(--g360-muted); display: block;"></i>
+       </span>
+       <span aria-hidden="true" style="color: var(--g360-accent); font-weight: bold;">></span>
+       <span>Powered by <span style="color: var(--g360-accent); font-weight: bold;">G360</span> | CCUSI 2026</span>
    </div>
 </html>

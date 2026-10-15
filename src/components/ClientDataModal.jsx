@@ -12,7 +12,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { buscarClientes, displayId, mapearClienteDeVenta } from '../services/clientesService';
 
 // Componente DocumentInput con auto-detección (Marca Snippet)
-const DocumentInput = ({ value, onChange, placeholder = '8 o 11 dígitos' }) => {
+const DocumentInput = ({ value, onChange, placeholder = 'RUC o DNI' }) => {
   const isRuc = value?.length > 8;
   const documentType = isRuc ? 'RUC' : 'DNI';
 
@@ -146,7 +146,7 @@ function ClientDataModal() {
               <input
                 type="text"
                 className="input-minimal pl-11 pr-10"
-                placeholder="Ej: 56101, RUC completo o inicio del nombre..."
+                placeholder="Código, RUC o nombre del cliente..."
                 value={termino}
                 onChange={e => { setTermino(e.target.value); setDropdownAbierto(true); }}
                 onFocus={() => setDropdownAbierto(true)}
@@ -222,7 +222,7 @@ function ClientDataModal() {
               <input
                 type="text"
                 className="input-minimal"
-                placeholder="Nombre del cliente..."
+                placeholder="Razón social o nombre..."
                 value={formData.nombre || ''}
                 onChange={e => setFormData({...formData, nombre: e.target.value})}
               />
@@ -234,7 +234,7 @@ function ClientDataModal() {
                 <input
                    type="text"
                   className="input-minimal font-mono"
-                  placeholder="OP-001"
+                  placeholder="Número de OC o referencia..."
                   value={formData.oc || ''}
                   onChange={e => setFormData({...formData, oc: e.target.value})}
                 />
@@ -254,7 +254,7 @@ function ClientDataModal() {
                 <input
                   type="text"
                   className="input-minimal"
-                  placeholder="Ej: Trujillo..."
+                  placeholder="Provincia o ciudad..."
                   value={formData.provincia || ''}
                   onChange={e => setFormData({...formData, provincia: e.target.value})}
                 />
@@ -264,7 +264,7 @@ function ClientDataModal() {
                 <input
                   type="text"
                   className="input-minimal text-xs"
-                  placeholder="Av. Las Artes..."
+                  placeholder="Dirección de entrega..."
                   value={formData.direccion || ''}
                   onChange={e => setFormData({...formData, direccion: e.target.value})}
                 />
@@ -277,7 +277,7 @@ function ClientDataModal() {
                 <input
                   type="tel"
                   className="input-minimal"
-                  placeholder="999 999 999"
+                  placeholder="Teléfono de contacto..."
                   value={formData.telefono || ''}
                   onChange={e => setFormData({...formData, telefono: e.target.value})}
                 />
@@ -287,7 +287,7 @@ function ClientDataModal() {
                 <input
                   type="email"
                   className="input-minimal text-xs"
-                  placeholder="ejemplo@correo.com"
+                  placeholder="Correo electrónico..."
                   value={formData.email || ''}
                   onChange={e => setFormData({...formData, email: e.target.value})}
                 />
