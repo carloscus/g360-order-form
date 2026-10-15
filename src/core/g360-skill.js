@@ -16,7 +16,7 @@ export const G360_CONFIG = {
     clientName: 'CIPSA',
     appTitle: 'CIPSA OrderX v2.0',
     clientLogoFile: './logo-cipsa.svg',
-    clientFavicon: './favicon.svg'
+    clientFavicon: '/logo-cipsa.svg'
   }
 };
 
