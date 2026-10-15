@@ -24,6 +24,15 @@ const UMBRAL_BAJO_STOCK = 10;
 
 const PRODUCTS_PER_PAGE = 24;
 
+// Identidad de color por categoría (marca CIPSA). La base de UI es neutra:
+// el color de categoría se aplica solo en chips activos, SKU y contador.
+const CATEGORY_COLORS = {
+  VINIBALL: { primary: '#dc2626', onPrimary: '#ffffff', secondary: '#111827' },      // rojo y negro
+  VINIFAN: { primary: '#ea580c', onPrimary: '#ffffff', secondary: '#1d4ed8' },       // naranja y azul
+  REPRESENTADAS: { primary: '#16a34a', onPrimary: '#ffffff', secondary: '#f8fafc' }, // verde y blanco
+};
+const colorDeCategoria = (cat) => CATEGORY_COLORS[cat]?.primary || null;
+
 // Estado de stock: agotado (0), bajo (<10 cajas VES), ok
 function stockEstado(p) {
   if (p.stock <= 0) return 'agotado';
@@ -50,7 +59,7 @@ function ProductDetailModal({ product, onClose }) {
         className="relative bg-[var(--g360-surface)] w-full max-w-xs rounded-2xl shadow-2xl border border-[var(--g360-border)] animate-scale-in p-5"
         onClick={(e) => e.stopPropagation()}
       >
-        <span className="text-2xl font-mono font-black tracking-tighter text-[var(--g360-accent)]">{product.codigo}</span>
+        <span className="text-2xl font-mono font-black tracking-tighter text-[var(--g360-accent)]" style={{ color: colorDeCategoria(product.categoria) || undefined }}>{product.codigo}</span>
         <h2 id="product-detail-title" className="text-sm font-bold text-[var(--g360-text)] mt-2 mb-4 leading-tight">{product.nombre}</h2>
         {(product.descontinuado || product.sinCatalogo) && (
           <p className={`text-[9px] font-black uppercase tracking-widest mb-3 ${product.descontinuado ? 'text-[var(--g360-muted)]' : 'text-amber-500'}`}>
@@ -146,6 +155,7 @@ function CatalogoPage() {
   const pagedItems = filteredProducts.slice((currentPage - 1) * PRODUCTS_PER_PAGE, currentPage * PRODUCTS_PER_PAGE);
   const totalPaginas = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
   const currentCategory = CATEGORIES.find(c => c.id === activeCatalog) || CATEGORIES[0];
+  const currentCatColor = currentCategory.categoria ? CATEGORY_COLORS[currentCategory.categoria] : null;
 
   // Si el filtro reduce los resultados y la página actual queda fuera de rango, volver a la 1
   useEffect(() => {
@@ -176,7 +186,7 @@ function CatalogoPage() {
           </div>
           <button
             onClick={() => setShowPedidoModal(true)}
-            className="shrink-0 px-6 py-3 bg-[var(--g360-accent)] text-black rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-[var(--g360-glow)] hover:scale-105 active:scale-95 transition-all"
+            className="shrink-0 px-6 py-3 bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-[var(--g360-glow)] hover:scale-105 active:scale-95 transition-all"
           >
             Cargar Cliente
           </button>
@@ -197,12 +207,12 @@ function CatalogoPage() {
 
       {/* Dynamic Header */}
       <div className="relative overflow-hidden pt-4 sm:pt-6 pb-3 sm:pb-4 px-4">
-        <span className="text-ghost opacity-5">{currentCategory.ghost}</span>
+        <span className="text-ghost opacity-5" style={currentCatColor ? { color: currentCatColor.secondary } : undefined}>{currentCategory.ghost}</span>
         <div className="relative z-10 text-center sm:text-left">
           <h2 className="text-2xl sm:text-3xl font-black font-premium uppercase tracking-tighter text-[var(--g360-text)]">
             {currentCategory.label}
           </h2>
-          <p className="text-[9px] sm:text-[10px] text-[var(--g360-accent)] font-black uppercase tracking-[0.2em] mt-1">
+          <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] mt-1" style={{ color: currentCatColor?.primary || 'var(--g360-accent)' }}>
             {filteredProducts.length} PRODUCTOS DISPONIBLES
           </p>
         </div>
@@ -211,20 +221,25 @@ function CatalogoPage() {
       {/* Navigation & Search Sticky */}
       <div className="sticky top-20 z-40 bg-[var(--g360-bg)]/80 backdrop-blur-2xl py-2 sm:py-3 -mx-4 px-4 lg:-mx-8 lg:px-8 border-b border-[var(--g360-border)] search-container rounded-b-[2.5rem]">
          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-3 mb-3 sm:pb-4 sm:mb-4">
-            {CATEGORIES.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => { setActiveCatalog(cat.id); setCurrentPage(1); }}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl whitespace-nowrap text-[9px] font-black uppercase tracking-widest transition-all lg:px-6 lg:py-3 lg:text-[10px] lg:gap-2 lg:rounded-2xl ${
-                  activeCatalog === cat.id
-                  ? 'bg-[var(--g360-accent)] text-black shadow-xl shadow-[var(--g360-accent)]/20'
-                  : 'bg-[var(--g360-surface)] text-[var(--g360-muted)] border border-[var(--g360-border)]'
-                }`}
-              >
-                <span className="material-symbols-outlined text-base lg:text-lg">{cat.icon}</span>
-                {cat.label}
-              </button>
-            ))}
+            {CATEGORIES.map(cat => {
+              const activo = activeCatalog === cat.id;
+              const color = cat.categoria ? CATEGORY_COLORS[cat.categoria] : null;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => { setActiveCatalog(cat.id); setCurrentPage(1); }}
+                  style={activo && color ? { backgroundColor: color.primary, color: color.onPrimary } : undefined}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl whitespace-nowrap text-[9px] font-black uppercase tracking-widest transition-all lg:px-6 lg:py-3 lg:text-[10px] lg:gap-2 lg:rounded-2xl ${
+                    activo
+                      ? (color ? 'shadow-xl' : 'bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] shadow-xl shadow-[var(--g360-accent)]/20')
+                      : 'bg-[var(--g360-surface)] text-[var(--g360-muted)] border border-[var(--g360-border)]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-base lg:text-lg">{cat.icon}</span>
+                  {cat.label}
+                </button>
+              );
+            })}
          </div>
 
          <div className="relative group">
@@ -252,7 +267,7 @@ function CatalogoPage() {
             <p className="text-sm font-bold text-[var(--g360-muted)] max-w-xs">{error}</p>
             <button
               onClick={refresh}
-              className="px-6 py-3 bg-[var(--g360-accent)] text-black rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg"
+              className="px-6 py-3 bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg"
             >
               Reintentar
             </button>
@@ -293,7 +308,7 @@ function CatalogoPage() {
               {/* Header SKU */}
               <div className="flex flex-col mb-3">
                 <div className="flex justify-between items-start">
-                  <span className="text-lg sm:text-xl font-mono font-black text-[var(--g360-accent)] tracking-tighter">
+                  <span className="text-lg sm:text-xl font-mono font-black text-[var(--g360-accent)] tracking-tighter" style={{ color: colorDeCategoria(p.categoria) || undefined }}>
                     {p.codigo}
                   </span>
                   <span className="text-[10px] font-black text-[var(--g360-muted)] uppercase tracking-widest">{p.linea}</span>
@@ -370,7 +385,7 @@ function CatalogoPage() {
                     }
                   }}
                   disabled={!(searchQuantities[p.codigo] > 0)}
-                  className="w-full h-10 bg-[var(--g360-accent)] text-black rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-[var(--g360-accent)]/20 disabled:opacity-20 disabled:grayscale hover:bg-[var(--g360-accent)] transition-all active:scale-95"
+                  className="w-full h-10 bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-[var(--g360-accent)]/20 disabled:opacity-20 disabled:grayscale hover:bg-[var(--g360-accent)] transition-all active:scale-95"
                 >
                   <span className="material-symbols-outlined text-xl font-bold">add_shopping_cart</span>
                   <span className="text-[10px] font-black uppercase tracking-widest">Añadir</span>

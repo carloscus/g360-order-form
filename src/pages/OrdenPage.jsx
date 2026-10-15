@@ -102,7 +102,7 @@ function OrdenPage() {
           className="flex items-center gap-4 bg-[var(--g360-surface)]/10 backdrop-blur-xl p-4 rounded-3xl border-[0.5px] border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] transition-[box-shadow_transform_background-color] duration-200"
         >
           <button onClick={(e) => { e.stopPropagation(); setShowExportConfirm(false); setShowClearConfirm(true); }} className="w-12 h-12 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-all border border-red-500/20 hover:border-red-500"><span className="material-symbols-outlined text-2xl">delete_sweep</span></button>
-          <button onClick={(e) => { e.stopPropagation(); handleExport(); }} className="h-12 px-5 bg-[var(--g360-accent)] text-black rounded-full font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-[var(--g360-accent)]/30 flex items-center gap-2 hover:bg-[var(--g360-accent)] hover:scale-105 transition-[transform_background-color] border border-[var(--g360-accent)]"><span className="material-symbols-outlined text-lg">share</span>ENVIAR</button>
+          <button onClick={(e) => { e.stopPropagation(); handleExport(); }} className="h-12 px-5 bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] rounded-full font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-[var(--g360-accent)]/30 flex items-center gap-2 hover:bg-[var(--g360-accent)] hover:scale-105 transition-[transform_background-color] border border-[var(--g360-accent)]"><span className="material-symbols-outlined text-lg">share</span>ENVIAR</button>
         </G360DragModal>
       )}
 
@@ -137,7 +137,7 @@ function OrdenPage() {
           {/* CTA principal: exportar hoja de pedido */}
           <button
             onClick={handleExport}
-            className="mt-5 w-full py-4 bg-[var(--g360-accent)] text-black rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-[var(--g360-glow)] flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all"
+            className="mt-5 w-full py-4 bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-[var(--g360-glow)] flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all"
           >
             <span className="material-symbols-outlined text-lg">download</span>
             Exportar Hoja de Pedido
@@ -214,7 +214,7 @@ function OrdenPage() {
               Cotización final por separado.
             </p>
             <div className="space-y-1.5 mb-3">
-              <button onClick={confirmExport} disabled={exportLoading} className="w-full py-3 bg-[var(--g360-accent)] text-black rounded-xl font-black text-[10px] uppercase flex items-center justify-center gap-2 shadow-lg shadow-[var(--g360-glow)] disabled:opacity-50">
+              <button onClick={confirmExport} disabled={exportLoading} className="w-full py-3 bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] rounded-xl font-black text-[10px] uppercase flex items-center justify-center gap-2 shadow-lg shadow-[var(--g360-glow)] disabled:opacity-50">
                 <span className={`material-symbols-outlined text-xl ${exportLoading ? 'animate-spin' : ''}`}>download</span>
                 {exportLoading ? 'PROCESANDO...' : 'DESCARGAR EXCEL'}
               </button>

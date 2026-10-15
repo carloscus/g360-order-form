@@ -9,8 +9,10 @@
   --g360-bg: #f8fafc;
   --g360-surface: #ffffff;
   --g360-surface-glass: rgba(255, 255, 255, 0.85);
-  --g360-accent: #4f46e5;
-  --g360-glow: rgba(79, 70, 229, 0.3);
+  /* Base neutra: botón oscuro sobre fondo claro (simetría con el modo oscuro) */
+  --g360-accent: #0f172a;
+  --g360-accent-contrast: #ffffff;
+  --g360-glow: rgba(15, 23, 42, 0.22);
   --g360-text: #0f172a;
   --g360-muted: #64748b;
   --g360-border: rgba(15, 23, 42, 0.08);
@@ -24,8 +26,10 @@
   --g360-bg: #0b1220;
   --g360-surface: #151e2e;
   --g360-surface-glass: rgba(21, 30, 46, 0.85);
-  --g360-accent: #6366f1;
-  --g360-glow: rgba(99, 102, 241, 0.5);
+  /* Base neutra: botón claro sobre fondo oscuro (inversión simétrica) */
+  --g360-accent: #e2e8f0;
+  --g360-accent-contrast: #0b1220;
+  --g360-glow: rgba(226, 232, 240, 0.18);
   --g360-text: #f0f4f8;
   --g360-muted: #94a3b8;
   --g360-border: rgba(255, 255, 255, 0.1);

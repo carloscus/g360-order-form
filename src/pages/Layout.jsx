@@ -28,7 +28,7 @@ function ConfirmModal({ isOpen, title, message, confirmText = 'Confirmar', cance
           <button onClick={onCancel} className="flex-1 px-4 py-3 bg-[var(--g360-input-bg)] text-[var(--g360-text)] rounded-xl font-bold text-xs uppercase tracking-widest">
             {cancelText}
           </button>
-          <button onClick={onConfirm} className={`flex-1 px-4 py-3 text-white rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${danger ? 'bg-red-500 shadow-lg' : 'bg-[var(--g360-accent)] text-black shadow-lg shadow-[var(--g360-glow)]'}`}>
+          <button onClick={onConfirm} className={`flex-1 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all ${danger ? 'bg-red-500 text-white shadow-lg' : 'bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] shadow-lg shadow-[var(--g360-glow)]'}`}>
             {confirmText}
           </button>
         </div>
@@ -54,7 +54,7 @@ function AlertModal({ isOpen, title, message, buttonText = 'Aceptar', onClose, t
           <h3 className="text-xl font-black text-[var(--g360-text)] uppercase tracking-tighter">{title}</h3>
         </div>
         <p className="text-[var(--g360-muted)] mb-8 text-sm font-medium">{message}</p>
-        <button onClick={onClose} className="w-full px-4 py-4 bg-[var(--g360-accent)] text-black rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg">
+        <button onClick={onClose} className="w-full px-4 py-4 bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-lg">
           {buttonText}
         </button>
       </div>
@@ -231,11 +231,11 @@ function Layout() {
         <aside className="hidden lg:flex flex-col w-64 h-[calc(100vh-80px)] sticky top-20 ml-8 bg-[var(--g360-surface)] rounded-[2.5rem] border border-[var(--g360-border)] p-6 gap-6 shadow-xl z-40">
           <div className="flex flex-col gap-2">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--g360-muted)] px-4 mb-2">Navegación</span>
-            <NavLink to="/catalogo" className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive ? 'bg-[var(--g360-accent)] text-black shadow-lg shadow-[var(--g360-glow)]' : 'text-[var(--g360-text)] hover:bg-[var(--g360-input-bg)]'}`}>
+            <NavLink to="/catalogo" className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive ? 'bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] shadow-lg shadow-[var(--g360-glow)]' : 'text-[var(--g360-text)] hover:bg-[var(--g360-input-bg)]'}`}>
               <span className="material-symbols-outlined">home</span>
               <span className="text-sm font-bold uppercase tracking-widest">Inicio</span>
             </NavLink>
-            <NavLink to="/orden" className={({isActive}) => `flex items-center justify-between px-4 py-3 rounded-2xl transition-all ${isActive ? 'bg-[var(--g360-accent)] text-black shadow-lg shadow-[var(--g360-glow)]' : 'text-[var(--g360-muted)] hover:bg-[var(--g360-input-bg)]'}`}>
+            <NavLink to="/orden" className={({isActive}) => `flex items-center justify-between px-4 py-3 rounded-2xl transition-all ${isActive ? 'bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] shadow-lg shadow-[var(--g360-glow)]' : 'text-[var(--g360-muted)] hover:bg-[var(--g360-input-bg)]'}`}>
               <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined">shopping_bag</span>
                 <span className="text-sm font-bold uppercase tracking-widest">Mi Orden</span>
@@ -314,7 +314,7 @@ function Layout() {
       {!isPathActive('/orden') && !cartOpen && (
         <button
           onClick={() => setCartOpen(true)}
-          className="fixed bottom-24 lg:bottom-8 right-4 lg:right-8 z-[550] h-14 pl-4 pr-5 bg-[var(--g360-accent)] text-black rounded-full shadow-2xl shadow-[var(--g360-glow)] flex items-center gap-2 hover:scale-105 active:scale-95 transition-all border border-[var(--g360-accent)]"
+          className="fixed bottom-24 lg:bottom-8 right-4 lg:right-8 z-[550] h-14 pl-4 pr-5 bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] rounded-full shadow-2xl shadow-[var(--g360-glow)] flex items-center gap-2 hover:scale-105 active:scale-95 transition-all border border-[var(--g360-accent)]"
         >
           <span className="relative">
             <span className="material-symbols-outlined text-2xl">shopping_cart</span>

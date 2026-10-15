@@ -30,7 +30,7 @@ const DocumentInput = ({ value, onChange, placeholder = '8 o 11 dígitos' }) => 
         onChange={handleInputChange}
         placeholder={placeholder}
       />
-      <span className={`absolute right-4 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter text-white transition-all duration-300 ${isRuc ? 'bg-rose-500 shadow-lg shadow-rose-500/20' : 'bg-[var(--g360-accent)] shadow-lg shadow-[var(--g360-glow)]'}`}>
+      <span className={`absolute right-4 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all duration-300 ${isRuc ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] shadow-lg shadow-[var(--g360-glow)]'}`}>
         {documentType}
       </span>
     </div>
@@ -304,7 +304,7 @@ function ClientDataModal() {
             </button>
             <button
               onClick={handleSave}
-              className="flex-[2] py-4 bg-[var(--g360-accent)] text-white font-bold rounded-2xl shadow-xl shadow-[var(--g360-accent)]/20 hover:bg-[var(--g360-accent)] hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest text-xs"
+              className="flex-[2] py-4 bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] font-bold rounded-2xl shadow-xl shadow-[var(--g360-accent)]/20 hover:bg-[var(--g360-accent)] hover:scale-[1.02] active:scale-95 transition-all uppercase tracking-widest text-xs"
             >
               Guardar Cambios
             </button>

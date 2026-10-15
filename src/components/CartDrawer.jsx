@@ -82,7 +82,7 @@ function CartDrawer({ open, onClose, onOpenClient }) {
               <span className="material-symbols-outlined text-6xl text-[var(--g360-muted)] opacity-40">remove_shopping_cart</span>
               <p className="text-sm font-bold text-[var(--g360-muted)]">Carrito vacío</p>
               <p className="text-[11px] text-[var(--g360-muted)] opacity-70 max-w-[220px]">Busca o selecciona productos del catálogo y agrégalos para generar tu hoja de pedido.</p>
-              <button onClick={onClose} className="mt-2 px-6 py-3 bg-[var(--g360-accent)] text-black rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg">
+              <button onClick={onClose} className="mt-2 px-6 py-3 bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg">
                 Ir al Catálogo
               </button>
             </div>
@@ -125,7 +125,7 @@ function CartDrawer({ open, onClose, onOpenClient }) {
           <button
             onClick={() => { onClose(); navigate('/orden'); }}
             disabled={cartCount === 0}
-            className="w-full py-4 bg-[var(--g360-accent)] text-black rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-[var(--g360-glow)] flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30 disabled:grayscale"
+            className="w-full py-4 bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] rounded-2xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-[var(--g360-glow)] flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-30 disabled:grayscale"
           >
             <span className="material-symbols-outlined text-lg">receipt_long</span>
             Generar Hoja de Pedido

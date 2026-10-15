@@ -30,7 +30,7 @@ export default function Paginador({ page, total, onChange }) {
   const btnBase = 'w-9 h-9 sm:w-11 sm:h-11 shrink-0 rounded-xl border border-[var(--g360-border)] flex items-center justify-center font-black transition-all disabled:opacity-20 disabled:pointer-events-none';
   const btnNav = `${btnBase} text-[var(--g360-muted)] hover:bg-[var(--g360-surface)] hover:text-[var(--g360-accent)]`;
   const btnNum = (p) => `${btnBase} text-xs ${p === page
-    ? 'bg-[var(--g360-accent)] text-black border-[var(--g360-accent)] shadow-lg shadow-[var(--g360-accent)]/30'
+    ? 'bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] border-[var(--g360-accent)] shadow-lg shadow-[var(--g360-accent)]/30'
     : 'text-[var(--g360-muted)] hover:bg-[var(--g360-surface)] hover:text-[var(--g360-accent)]'}`;
 
   return (

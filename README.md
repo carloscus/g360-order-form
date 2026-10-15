@@ -342,24 +342,29 @@ El flujo horario que descargaba `stock_data.json` desde appweb y creaba PRs qued
 
 ## 🎨 Paleta de Colores
 
-Paleta **moderna Indigo/Violeta** (variante custom del design system G360, sin verde):
+Sistema de dos niveles: **base neutra** para la UI (simétrica entre temas) + **identidad de color por categoría**.
 
-### Modo Claro
-- **Fondo**: `#f8fafc` (slate-50)
-- **Cards**: `#ffffff` con glassmorphism
-- **Primario (acento)**: `#4f46e5` (indigo-600)
-- **Acento secundario**: `#8b5cf6` (violeta-500)
-- **Texto**: `#0f172a` (slate-900)
+### Base neutra (botones y elementos)
+| Rol | Claro | Oscuro |
+|-----|-------|--------|
+| Fondo | `#f8fafc` | `#0b1220` |
+| Cards | `#ffffff` glassmorphism | `#151e2e` glassmorphism |
+| Acento (relleno de botones) | `#0f172a` (gráfito oscuro) | `#e2e8f0` (gris claro) |
+| Fuente sobre acento (`--g360-accent-contrast`) | `#ffffff` | `#0b1220` |
+| Texto | `#0f172a` | `#f0f4f8` |
 
-### Modo Oscuro
-- **Fondo**: `#0b1220` (navy G360)
-- **Cards**: `#151e2e` con glassmorphism
-- **Primario (acento)**: `#6366f1` (indigo-500)
-- **Acento secundario**: `#8b5cf6` (violeta-500)
-- **Texto**: `#f0f4f8` (slate-50)
+La inversión simétrica (botón oscuro en claro / botón claro en oscuro) garantiza contraste máximo con neutros.
+
+### Identidad por categoría (chips activos, SKU y contador)
+| Categoría | Colores de marca | Primario aplicado |
+|-----------|------------------|-------------------|
+| **Viniball** | rojo y negro | `#dc2626` |
+| **Vinifan** | naranja y azul | `#ea580c` (azul `#1d4ed8` como secundario) |
+| **Representadas** | verde y blanco | `#16a34a` |
+
+Definidas en `CATEGORY_COLORS` (`src/pages/CatalogoPage.jsx`).
 
 ### Colores semánticos (estados, no marca)
-- **Éxito/OK**: ícono check con acento indigo
 - **Bajo stock**: ámbar `#f59e0b`
 - **Agotado/Error**: rojo `#ef4444`
 
