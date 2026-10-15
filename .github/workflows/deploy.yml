@@ -1,4 +1,4 @@
-name: Deploy a GH Pages
+﻿name: Deploy a GH Pages
 
 on:
   push:
@@ -25,10 +25,18 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      - name: Configurar identidad Git
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
+
       - name: Build + deploy (gh-pages)
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           VITE_STOCK_API_URL: ${{ secrets.VITE_STOCK_API_URL }}
           VITE_STOCK_API_KEY: ${{ secrets.VITE_STOCK_API_KEY }}
-        run: npm run deploy
+        run: |
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git
+          npm run deploy
