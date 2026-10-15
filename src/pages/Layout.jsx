@@ -5,8 +5,9 @@
  */
 
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import stockApi from '../services/stockApi';
 import { loadExcelFile } from '../utils/xlsxLoader';
 import { getTimeAgo } from '../utils/formatters';
 import { G360_CONFIG } from '../core/g360-skill';
@@ -114,6 +115,9 @@ function Layout() {
   // Determinar si una ruta está activa (necesario antes del render)
   const isPathActive = (path) => location.pathname === path;
   const enCatalogo = isPathActive('/catalogo');
+
+  // Carga inicial del catálogo/stock (base estático + API en segundo plano)
+  useEffect(() => { stockApi.ensureLoaded(); }, []);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
