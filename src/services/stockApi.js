@@ -15,7 +15,8 @@
  * - Pub/sub para suscriptores (React vía useSyncExternalStore)
  */
 
-const STOCK_API_URL_PROD = import.meta.env.VITE_STOCK_API_URL || 'https://g360-stock-api.onrender.com/api/v1/stock';
+const ENV = import.meta.env || {};
+const STOCK_API_URL_PROD = ENV.VITE_STOCK_API_URL || 'https://g360-stock-api.onrender.com/api/v1/stock';
 // En localhost (dev 5174 / preview 4173) usar el proxy de Vite ('/api' → Render):
 // el header X-API-Key dispara preflight CORS y el allowlist de la API no incluye localhost.
 // En producción (github.io, origen allowlistado) se usa la URL real.
@@ -23,10 +24,10 @@ const esLocalhost = typeof window !== 'undefined' &&
   ['localhost', '127.0.0.1', '[::1]', '::1'].includes(window.location.hostname);
 const STOCK_API_URL = esLocalhost ? '/api/v1/stock' : STOCK_API_URL_PROD;
 // Clave de SOLO LECTURA del equipo (misma exposición que g360-stock-reporter-lit)
-const STOCK_API_KEY = import.meta.env.VITE_STOCK_API_KEY || 'cipsa2026';
+const STOCK_API_KEY = ENV.VITE_STOCK_API_KEY || 'cipsa2026';
 const HEALTH_URL = STOCK_API_URL.replace(/\/stock$/, '/health');
 // Catálogo base estático (fallback de primer render; jamás se persiste como cache)
-const BASE_CATALOG_URL = `${import.meta.env.BASE_URL || '/'}productos_local.json`;
+const BASE_CATALOG_URL = `${ENV.BASE_URL || '/'}productos_local.json`;
 
 const SESSION_KEY = 'g360_tienda_catalog_v1';
 const LOCAL_KEY = 'g360_tienda_catalog_local_v1';

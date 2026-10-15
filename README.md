@@ -334,7 +334,9 @@ El flujo horario que descargaba `stock_data.json` desde appweb y creaba PRs qued
 
 **Nota:** las columnas ID_CLIENTE y VENDEDOR se agregan al final (G, H); el contrato original de 6 columnas (A-F) se mantiene para el proceso downstream. El importador acepta ambos formatos.
 
-**Filas de resumen al pie** (sin SKU, el importador las saltea): unidades totales, cajas, total referencial, nota de precios y fecha de generación. El mensaje de Email también incluye productos, unidades y total.
+**Filas de resumen al pie** (sin SKU, el importador las saltea): unidades totales, cajas, total referencial, nota de precios, **fecha de los datos del catálogo** (trazabilidad de frescura: si el export se hizo offline/base, queda estampado), fecha de generación y signature G360. El mensaje de Email también incluye productos, unidades y total.
+
+**Integridad de precios**: el carrito se reconcilia automáticamente contra el catálogo fresco de la API (`sincronizarCarrito.js`) — el dato del servidor siempre gana para precio/box/nombre/línea; cantidades y orden intactas. Así un item agregado desde el catálogo base o cache vieja se corrige solo al sincronizar.
 
 **Nombre del archivo:** `OC_20456127917_trujillo_280226.xlsx`
 **Nombre de pestaña:** Provincia (ej: "Trujillo")

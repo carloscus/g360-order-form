@@ -9,6 +9,7 @@
 
 import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
 import stockApi from '../services/stockApi';
+import { sincronizarCarritoConCatalogo } from '../utils/sincronizarCarrito';
 
 const AppContext = createContext(null);
 
@@ -145,27 +146,13 @@ export function AppProvider({ children }) {
     saveToStorage(STORAGE_KEYS.ORDER_INDEX, nextOrderIndex);
   }, [nextOrderIndex, isHydrated]);
 
-  // Sincronizar precios del carrito cuando llegan datos frescos de la API:
-  // el precio es referencial y siempre gana el del servidor (cantidades intactas)
+  // Sincronizar carrito contra el catálogo fresco de la API: el dato del
+  // servidor siempre gana (precio referencial, box, nombre, línea) — cantidades intactas
   useEffect(() => {
     if (!isHydrated) return;
     const unsub = stockApi.subscribe((st) => {
       if (st.status !== 'fresh' || st.fuente !== 'api' || !st.items.length) return;
-      const precios = new Map(st.items.map(p => [p.codigo, p.precioLista]));
-      setSelectedProducts(prev => {
-        let changed = false;
-        const next = {};
-        for (const [codigo, item] of Object.entries(prev)) {
-          const nuevo = precios.get(codigo);
-          if (nuevo !== undefined && Number(nuevo) !== Number(item.precioLista)) {
-            changed = true;
-            next[codigo] = { ...item, precioLista: Number(nuevo) };
-          } else {
-            next[codigo] = item;
-          }
-        }
-        return changed ? next : prev;
-      });
+      setSelectedProducts(prev => sincronizarCarritoConCatalogo(prev, st.items));
     });
     return unsub;
   }, [isHydrated]);

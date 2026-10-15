@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import stockApi from '../services/stockApi.js';
 
 /**
  * Generador de la Hoja de Pedido (Excel)
@@ -58,11 +59,17 @@ export function buildResumenRows(selectedProducts) {
   const { unidades, cajas, monto } = calcularTotales(selectedProducts);
   const ahora = new Date();
   const fecha = ahora.toLocaleString('es-PE', { timeZone: 'America/Lima' });
+  // Trazabilidad de frescura: qué vintage de datos generó esta hoja
+  const st = stockApi.getState?.() || {};
+  const datosLinea = st.fechaDescarga
+    ? `Datos del catálogo: ${st.fechaDescarga}`
+    : `Datos del catálogo: base local${st.fuente === 'base' ? ' (sin sincronizar)' : ''}`;
   return [
     [],
     ['', '', '', '', '', `UNIDADES TOTALES: ${unidades} · CAJAS: ${cajas}`],
     ['', '', '', '', '', `TOTAL REFERENCIAL: S/ ${monto.toFixed(2)}`],
     ['', '', '', '', '', 'NOTA: Precios referenciales sin descuentos ni IGV. Sujeto a cotización final.'],
+    ['', '', '', '', '', datosLinea],
     ['', '', '', '', '', `Generado: ${fecha} · CIPSA OrderX`],
     ['', '', '', '', '', '⋮> powered by G360']
   ];
