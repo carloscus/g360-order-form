@@ -102,7 +102,7 @@ function ProductDetailModal({ product, onClose }) {
 
 function CatalogoPage() {
   const { addToCart, clientData, setShowPedidoModal } = useApp();
-  const { items, status, error, refresh } = useStockCatalog();
+  const { items, status, error, fuente, refresh } = useStockCatalog();
   const [search, setSearch] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [activeCatalog, setActiveCatalog] = useState('todos');
@@ -176,6 +176,16 @@ function CatalogoPage() {
   return (
     <div className={`transition-all duration-500 ${isSearchFocused && !search.trim() ? 'search-focus-active' : ''}`}>
       {isSearchFocused && <div className="search-overlay" onClick={() => setIsSearchFocused(false)} />}
+
+      {/* Aviso: catálogo base (precios pueden estar desactualizados) */}
+      {fuente === 'base' && status === 'stale' && (
+        <div className="mx-4 mt-4 mb-2 rounded-2xl bg-amber-500/10 border border-amber-500/40 px-4 py-2.5 flex items-center gap-2.5">
+          <span className="material-symbols-outlined text-amber-500 text-lg shrink-0">warning</span>
+          <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide leading-tight">
+            Catálogo base de respaldo — los precios pueden estar desactualizados. Conectando con el servidor…
+          </p>
+        </div>
+      )}
 
       {/* Flujo de tienda: Paso 1 - Cliente */}
       {!clienteCargado ? (

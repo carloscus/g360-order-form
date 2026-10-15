@@ -8,6 +8,7 @@
  */
 
 import { createContext, useContext, useState, useCallback, useMemo, useEffect } from 'react';
+import stockApi from '../services/stockApi';
 
 const AppContext = createContext(null);
 
@@ -143,6 +144,31 @@ export function AppProvider({ children }) {
     if (!isHydrated) return; // No guardar hasta que esté hidratado
     saveToStorage(STORAGE_KEYS.ORDER_INDEX, nextOrderIndex);
   }, [nextOrderIndex, isHydrated]);
+
+  // Sincronizar precios del carrito cuando llegan datos frescos de la API:
+  // el precio es referencial y siempre gana el del servidor (cantidades intactas)
+  useEffect(() => {
+    if (!isHydrated) return;
+    const unsub = stockApi.subscribe((st) => {
+      if (st.status !== 'fresh' || st.fuente !== 'api' || !st.items.length) return;
+      const precios = new Map(st.items.map(p => [p.codigo, p.precioLista]));
+      setSelectedProducts(prev => {
+        let changed = false;
+        const next = {};
+        for (const [codigo, item] of Object.entries(prev)) {
+          const nuevo = precios.get(codigo);
+          if (nuevo !== undefined && Number(nuevo) !== Number(item.precioLista)) {
+            changed = true;
+            next[codigo] = { ...item, precioLista: Number(nuevo) };
+          } else {
+            next[codigo] = item;
+          }
+        }
+        return changed ? next : prev;
+      });
+    });
+    return unsub;
+  }, [isHydrated]);
 
   // Agregar producto al carrito
   const addToCart = useCallback((producto, cantidad = 1) => {
