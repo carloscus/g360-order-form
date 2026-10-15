@@ -5,8 +5,13 @@
  * - GET /api/v1/stock con X-API-Key
  * - Transformación: sku→codigo, precio→precioLista (referencial), un_bx→bxSize,
  *   stock = disponible del almacén VES (venta). Otros almacenes: informativos.
- * - Cache de 3 capas: memoria → sessionStorage (5 min) → localStorage (7 días)
- * - Probe de frescura ?limit=1 cada 10 min + keep-alive /health cada 5 min
+ * - Estrategia offline-first SIN persistir data vieja como si fuera fresca:
+ *     1) memoria → sessionStorage (5 min) → localStorage (respaldo, sin expiración pero
+ *        siempre marcado 'stale' y con edad visible en el badge)
+ *     2) Catálogo base estático (productos_local.json, mismo origen): SOLO para el primer
+ *        render y como último recurso. NUNCA se persiste en localStorage.
+ *     3) Cargas calientes: probe ?limit=1 (1 KB) — si la fecha_descarga del servidor
+ *        coincide con la cache, NO se descarga el payload completo.
  * - Pub/sub para suscriptores (React vía useSyncExternalStore)
  */
 
@@ -20,6 +25,8 @@ const STOCK_API_URL = esLocalhost ? '/api/v1/stock' : STOCK_API_URL_PROD;
 // Clave de SOLO LECTURA del equipo (misma exposición que g360-stock-reporter-lit)
 const STOCK_API_KEY = import.meta.env.VITE_STOCK_API_KEY || 'cipsa2026';
 const HEALTH_URL = STOCK_API_URL.replace(/\/stock$/, '/health');
+// Catálogo base estático (fallback de primer render; jamás se persiste como cache)
+const BASE_CATALOG_URL = `${import.meta.env.BASE_URL || '/'}productos_local.json`;
 
 const SESSION_KEY = 'g360_tienda_catalog_v1';
 const LOCAL_KEY = 'g360_tienda_catalog_local_v1';
@@ -30,6 +37,7 @@ const PROBE_INTERVAL_MS = 10 * 60 * 1000;     // 10 min
 const KEEPALIVE_INTERVAL_MS = 5 * 60 * 1000;  // 5 min
 const TIMEOUT_FULL_MS = 25000;
 const TIMEOUT_PROBE_MS = 60000;
+const TIMEOUT_BASE_MS = 8000;
 
 // Ventana operativa Lima: Lun-Sáb 07:00-22:59 (fuera de ella no se hace polling)
 function enVentanaOperativa() {
@@ -48,7 +56,8 @@ let state = {
   status: 'idle', // idle | loading | waking | fresh | stale | error
   error: null,
   lastFetch: null,      // ISO del último fetch completo exitoso
-  fechaDescarga: null   // fecha_descarga del servidor (frescura de datos)
+  fechaDescarga: null,  // fecha_descarga del servidor (frescura de datos)
+  fuente: null          // 'api' | 'base' | null
 };
 
 const listeners = new Set();
@@ -97,6 +106,37 @@ function transformItem(raw) {
   };
 }
 
+// Mapeo linea (catálogo base viejo) → categoria (3 líneas de venta de la tienda)
+const LINEA_A_CATEGORIA = {
+  PELOTAS: 'VINIBALL', JUGUETES: 'VINIBALL', MASCOTAS: 'VINIBALL', OTROS: 'VINIBALL',
+  METALICA: 'VINIFAN', FORROS: 'VINIFAN', ARCHIVO: 'VINIFAN', PINTURA: 'VINIFAN',
+  ESCRITURA: 'VINIFAN', ACCESORIOS: 'VINIFAN', MANUALIDADES: 'VINIFAN',
+  DIDACTICOS: 'VINIFAN', PEGAMENTOS: 'VINIFAN', DIBUJO: 'VINIFAN',
+  REPRESENTADAS: 'REPRESENTADAS', 'PRODUCTOS INDUSTRIALES': 'REPRESENTADAS', PUBLICIDAD: 'REPRESENTADAS'
+};
+
+/**
+ * Transforma un item del catálogo base estático (formato legacy productos_local.json)
+ */
+function transformStatic(raw, index) {
+  const linea = (raw.linea || '').toUpperCase().trim();
+  return {
+    codigo: String(raw.codigo || '').trim(),
+    nombre: raw.nombre || raw.descripcion || '',
+    bxSize: Number(raw.u_por_caja || raw.uni_caja) || 1,
+    precioLista: Number(raw.precio) || 0,
+    pesoUm: Number(raw.can_kg_um || raw.peso_kg) || 0,
+    ean: raw.ean || '',
+    ean14: raw.ean_14 || '',
+    linea,
+    categoria: LINEA_A_CATEGORIA[linea] || '',
+    orden: Number(raw.orden) || index + 1,
+    stock: Number(raw.stock_referencial || 0),
+    sinCatalogo: false,
+    descontinuado: false
+  };
+}
+
 function persistCache(payload) {
   const record = {
     savedAt: Date.now(),
@@ -140,14 +180,15 @@ function readLocal() {
   }
 }
 
-function applyCache(record, status) {
+function applyCache(record, status, fuente = 'api') {
   setState({
     items: record.items,
     metadata: record.metadata || null,
     lastFetch: record.lastFetch || null,
     fechaDescarga: record.fechaDescarga || record.metadata?.fecha_descarga || null,
     status,
-    error: null
+    error: null,
+    fuente
   });
 }
 
@@ -163,6 +204,21 @@ async function fetchWithTimeout(url, timeoutMs) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * Catálogo base estático (productos_local.json): primer render instantáneo y
+ * último recurso offline. NUNCA se persiste en localStorage/cache: es data de
+ * referencia vieja por definición y no debe sobrevivir a la sesión como cache.
+ */
+async function cargarBase() {
+  const response = await fetchWithTimeout(BASE_CATALOG_URL, TIMEOUT_BASE_MS);
+  if (!response.ok) throw new Error(`Catálogo base respondió ${response.status}`);
+  const data = await response.json();
+  const items = (Array.isArray(data) ? data : (data.productos || [])).map(transformStatic);
+  if (!items.length) throw new Error('Catálogo base vacío');
+  applyCache({ items, metadata: null, lastFetch: null, fechaDescarga: null }, 'stale', 'base');
+  return items;
 }
 
 async function fullFetch({ silent = false } = {}) {
@@ -181,16 +237,25 @@ async function fullFetch({ silent = false } = {}) {
         lastFetch: new Date().toISOString(),
         fechaDescarga: payload.metadata?.fecha_descarga || null,
         status: 'fresh',
-        error: null
+        error: null,
+        fuente: 'api'
       });
       persistCache({ items, metadata: payload.metadata, lastFetch: state.lastFetch, fechaDescarga: state.fechaDescarga });
     } catch (err) {
       const waking = err.name === 'AbortError' || /502|503|timeout/i.test(err.message || '');
+      let msg = waking
+        ? 'El servidor está despertando (Render free tier). Reintentando...'
+        : (err.message || 'Error al obtener catálogo');
+      // Sin datos: último recurso = catálogo base (solo en memoria, no se persiste)
+      if (!state.items.length) {
+        try {
+          await cargarBase();
+          msg = 'Sin conexión con la Stock API: mostrando catálogo base';
+        } catch (e) { /* tampoco hay base → error real */ }
+      }
       setState({
         status: state.items.length ? 'stale' : 'error',
-        error: waking
-          ? 'El servidor está despertando (Render free tier). Reintentando...'
-          : (err.message || 'Error al obtener catálogo')
+        error: msg
       });
     } finally {
       inflightFull = null;
@@ -200,7 +265,27 @@ async function fullFetch({ silent = false } = {}) {
 }
 
 /**
- * Probe ligero: solo metadata (?limit=1). Si cambió fecha_descarga, refetch completo.
+ * Sincronización liviana para cargas calientes: probe ?limit=1 (1 KB).
+ * - Servidor con la MISMA fecha_descarga que la cache → no se descarga nada, se marca 'fresh'.
+ * - Fecha distinta (o fechaDescarga desconocida, ej. catálogo base) → descarga completa.
+ * - Probe falla (offline/servidor dormido) → se queda con la cache, sin errores visibles.
+ */
+async function syncLigero() {
+  try {
+    const response = await fetchWithTimeout(`${STOCK_API_URL}?limit=1`, TIMEOUT_PROBE_MS);
+    if (!response.ok) return;
+    const payload = await response.json();
+    const remota = payload.metadata?.fecha_descarga;
+    if (!remota || remota !== state.fechaDescarga) {
+      await fullFetch({ silent: true });
+    } else {
+      setState({ status: 'fresh', error: null });
+    }
+  } catch (e) { /* offline: quedamos con la cache */ }
+}
+
+/**
+ * Probe periódico (gated por ventana operativa)
  */
 async function probeFreshness() {
   if (!enVentanaOperativa()) return;
@@ -209,15 +294,7 @@ async function probeFreshness() {
     fullFetch({ silent: false });
     return;
   }
-  try {
-    const response = await fetchWithTimeout(`${STOCK_API_URL}?limit=1`, TIMEOUT_PROBE_MS);
-    if (!response.ok) return;
-    const payload = await response.json();
-    const remota = payload.metadata?.fecha_descarga;
-    if (remota && remota !== state.fechaDescarga) {
-      fullFetch({ silent: false });
-    }
-  } catch (e) { /* silencioso */ }
+  await syncLigero();
 }
 
 async function keepAlive() {
@@ -236,10 +313,10 @@ function startBackground() {
       probeFreshness();
     }
   });
-  // Offline-first: al volver la conexión, refrescar de inmediato
+  // Offline-first: al volver la conexión, sincronizar liviano (probe decide si hay full)
   window.addEventListener('online', () => {
-    setState({ status: state.items.length ? 'stale' : 'loading', error: null });
-    fullFetch({ silent: false });
+    setState({ error: null });
+    syncLigero();
   });
   window.addEventListener('offline', () => {
     if (state.items.length) {
@@ -249,7 +326,10 @@ function startBackground() {
 }
 
 /**
- * Carga inicial: usa caches frescos y refresca en background si están fríos.
+ * Carga inicial:
+ *   session (≤5 min) → fresh
+ *   local (sin expiración) → stale + syncLigero (probe decide si hay descarga)
+ *   sin cache → catálogo base (instantáneo, en memoria) + descarga completa de la API
  * @returns {Promise<void>} resuelve con el estado luego del primer intento
  */
 export function ensureLoaded() {
@@ -262,16 +342,18 @@ export function ensureLoaded() {
   const local = readLocal();
   if (local) {
     // Hidrata siempre (sin importar la edad): offline = datos para procesar
-    applyCache(local, 'stale');
-    fullFetch({ silent: true });
+    applyCache(local, 'stale', 'api');
+    syncLigero();
     return Promise.resolve(state);
   }
   setState({ status: 'loading' });
-  return fullFetch();
+  return cargarBase()
+    .then(() => fullFetch({ silent: true }))
+    .catch(() => fullFetch());
 }
 
 /**
- * Refresco manual (botón Sincronizar)
+ * Refresco manual (botón Sincronizar): descarga completa siempre
  */
 export function refresh() {
   return fullFetch();

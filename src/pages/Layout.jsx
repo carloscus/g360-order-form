@@ -62,8 +62,8 @@ function AlertModal({ isOpen, title, message, buttonText = 'Aceptar', onClose, t
   );
 }
 
-// Indicador de frescura del stock (Render API): 🟢 fresco / 🟡 cache frío / 🔵 cargando / 🔴 error
-function StockStatusBadge({ status, lastFetch, error, onRefresh, refreshing }) {
+// Indicador de frescura del stock (Render API): acento = en vivo / 🟡 cache / 🟠 base / 🔴 viejo o error
+function StockStatusBadge({ status, lastFetch, error, fuente, onRefresh, refreshing }) {
   const config = {
     fresh: { color: 'bg-[var(--g360-accent)]', label: 'Stock en vivo' },
     stale: { color: 'bg-amber-500', label: 'Cache local' },
@@ -74,6 +74,14 @@ function StockStatusBadge({ status, lastFetch, error, onRefresh, refreshing }) {
   }[status] || { color: 'bg-slate-400', label: 'Stock' };
 
   const timeAgo = lastFetch ? getTimeAgo(lastFetch) : '';
+  // Data vieja (>7 días): avisar con rojo — sirve para trabajar offline, pero no es fresca
+  const dias = lastFetch ? Math.floor((Date.now() - new Date(lastFetch).getTime()) / 86400000) : null;
+  const muyVieja = status === 'stale' && dias !== null && dias >= 7;
+
+  let color = config.color;
+  let label = config.label;
+  if (fuente === 'base' && status === 'stale') { color = 'bg-amber-500'; label = 'Catálogo base'; }
+  if (muyVieja) { color = 'bg-red-500'; label = `Cache ${dias}d`; }
 
   return (
     <button
@@ -82,9 +90,9 @@ function StockStatusBadge({ status, lastFetch, error, onRefresh, refreshing }) {
       title={error || `Actualizado ${timeAgo}. Click para sincronizar.`}
       className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[var(--g360-input-bg)] border border-[var(--g360-border)] hover:bg-[var(--g360-surface)] transition-all disabled:opacity-50"
     >
-      <span className={`w-2 h-2 rounded-full ${config.color}`}></span>
+      <span className={`w-2 h-2 rounded-full ${color}`}></span>
       <span className="hidden sm:inline text-[9px] font-black uppercase tracking-widest text-[var(--g360-muted)]">
-        {refreshing ? 'Sincronizando...' : (timeAgo || config.label)}
+        {refreshing ? 'Sincronizando...' : (timeAgo || label)}
       </span>
       <span className={`material-symbols-outlined text-sm text-[var(--g360-muted)] ${refreshing ? 'animate-spin' : ''}`}>sync</span>
     </button>
@@ -93,7 +101,7 @@ function StockStatusBadge({ status, lastFetch, error, onRefresh, refreshing }) {
 
 function Layout() {
   const { cartCount, setShowPedidoModal, clearCart, clientData, setClientDataAll, addToCart, isDarkMode, toggleTheme } = useApp();
-  const { items: catalogo, status, lastFetch, error, refresh: refreshStock } = useStockCatalog();
+  const { items: catalogo, status, lastFetch, error, fuente, refresh: refreshStock } = useStockCatalog();
   const location = useLocation();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -214,6 +222,7 @@ function Layout() {
               status={status}
               lastFetch={lastFetch}
               error={error}
+              fuente={fuente}
               onRefresh={performRefresh}
               refreshing={isRefreshing}
             />

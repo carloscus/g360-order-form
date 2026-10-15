@@ -77,7 +77,9 @@ Sigue las convenciones del proyecto:
 
 ### 💾 Persistencia y Sincronización
 - **localStorage**: Carrito y datos de cliente persistidos automáticamente
-- **Cache Offline-First**: Catálogo/stock en memoria → sesión (5 min) → **localStorage sin expiración**. Con conexión refresca automáticamente (evento `online`, probe cada 10 min); sin conexión **sigue operando con los últimos datos** (badge 🟡 muestra su edad)
+- **Cache Offline-First (sin data vieja persistida)**: memoria → sesión (5 min) → **localStorage sin expiración** (siempre marcada como cache, edad visible en el badge; >7 días en rojo). Con conexión refresca automático; sin conexión **sigue operando con los últimos datos**
+- **Sync liviano**: en cargas calientes un probe `?limit=1` (1 KB) compara `fecha_descarga` — si el servidor no cambió, **no se descarga el payload completo**
+- **Catálogo base**: si no hay cache (primer visita / storage limpio) se muestra al instante `productos_local.json` estático (mismo origen) — **solo en memoria, nunca se persiste como cache**; al conectar, la API lo reemplaza
 
 ### 📤 Exportación y Carga XLSX
 - **Exportar a Excel**: Hoja de Pedido con datos del cliente (RUC, OC, SKU, cantidad, precio, ID cliente, vendedor)
