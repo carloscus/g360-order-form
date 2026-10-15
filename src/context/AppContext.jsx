@@ -112,6 +112,10 @@ export function AppProvider({ children }) {
   // Estado del modal de pedido
   const [showPedidoModal, setShowPedidoModal] = useState(false);
 
+  // Búsqueda del catálogo (UI vive en el header; el filtrado en CatalogoPage)
+  const [search, setSearch] = useState('');
+  const [activeCatalog, setActiveCatalog] = useState('todos');
+
   // Aplicar clase dark al documento cuando cambie el tema
   useEffect(() => {
     const root = document.documentElement;
@@ -308,7 +312,11 @@ export function AppProvider({ children }) {
     setShowPedidoModal,
     isInCart,
     nextOrderIndex,
-    toggleTheme
+    toggleTheme,
+    search,
+    setSearch,
+    activeCatalog,
+    setActiveCatalog
   };
 
   return (

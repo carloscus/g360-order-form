@@ -10,7 +10,9 @@ import { useApp } from '../context/AppContext';
 import { loadExcelFile } from '../utils/xlsxLoader';
 import { getTimeAgo } from '../utils/formatters';
 import { G360_CONFIG } from '../core/g360-skill';
+import { CATEGORIES, CATEGORY_COLORS } from '../core/categorias';
 import { useStockCatalog } from '../hooks/useStockCatalog';
+import useVoz from '../hooks/useVoz';
 import ClientDataModal from '../components/ClientDataModal';
 import CartDrawer from '../components/CartDrawer';
 
@@ -100,14 +102,29 @@ function StockStatusBadge({ status, lastFetch, error, fuente, onRefresh, refresh
 }
 
 function Layout() {
-  const { cartCount, setShowPedidoModal, clearCart, clientData, setClientDataAll, addToCart, isDarkMode, toggleTheme } = useApp();
+  const {
+    cartCount, setShowPedidoModal, clearCart, clientData, setClientDataAll, addToCart,
+    isDarkMode, toggleTheme, search, setSearch, activeCatalog, setActiveCatalog
+  } = useApp();
   const { items: catalogo, status, lastFetch, error, fuente, refresh: refreshStock } = useStockCatalog();
   const location = useLocation();
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
+  // Determinar si una ruta está activa (necesario antes del render)
+  const isPathActive = (path) => location.pathname === path;
+  const enCatalogo = isPathActive('/catalogo');
+
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+
+  const { escuchando, soportado: vozSoportada, escuchar, detener } = useVoz({
+    onTexto: (t) => { setSearch(t); if (t.trim()) setActiveCatalog('todos'); }
+  });
+
+  const clienteCargado = Boolean(clientData.ruc || clientData.nombre);
+  const inicialesCliente = (clientData.nombre || '')
+    .split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
   const [modals, setModals] = useState({
     load: { open: false, data: null },
@@ -195,49 +212,128 @@ function Layout() {
     navigate('/orden');
   };
 
-  // Determinar si una ruta está activa
-  const isPathActive = (path) => location.pathname === path;
-
   return (
     <div className="min-h-screen bg-[var(--g360-bg)] transition-colors duration-300 pb-16 lg:pb-0">
-      {/* Header Premium */}
-      <div className="fixed top-0 left-0 right-0 z-[500] p-4 pointer-events-none">
-        <header className="max-w-[1400px] mx-auto h-16 glass rounded-2xl px-6 flex items-center justify-between pointer-events-auto border border-[var(--g360-border)] shadow-xl">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-[var(--g360-surface)] rounded-xl flex items-center justify-center p-1.5 shadow-sm border border-[var(--g360-border)]">
-              <img src={G360_CONFIG.branding.clientLogoFile} alt="CIPSA" className="w-full h-full object-contain" />
+      {/* Header Hub: identidad + cliente + frescura + tema · búsqueda + segmentos */}
+      <div className="fixed top-0 left-0 right-0 z-[500] p-3 pointer-events-none">
+        <header className="max-w-[1400px] mx-auto glass rounded-2xl px-4 py-2 pointer-events-auto border border-[var(--g360-border)] shadow-xl">
+          {/* Fila 1: identidad + cliente + estado de datos */}
+          <div className="h-9 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-9 h-9 bg-[var(--g360-surface)] rounded-lg flex items-center justify-center p-1 border border-[var(--g360-border)] shrink-0">
+                <img src={G360_CONFIG.branding.clientLogoFile} alt="CIPSA" className="w-full h-full object-contain" />
+              </div>
+              <div className="hidden md:flex flex-col leading-none shrink-0">
+                <h1 className="text-base font-black font-premium tracking-tighter uppercase italic text-[var(--g360-text)]">
+                  CIPSA <span className="text-[var(--g360-accent)]">OrderX</span>
+                </h1>
+                <span className="text-[8px] uppercase font-black text-[var(--g360-muted)] tracking-[0.15em] mt-0.5">
+                  Gestión de Pedidos
+                </span>
+              </div>
+
+              {/* Chip cliente compacto (contexto fuera de la ventana principal) */}
+              <button
+                onClick={() => setShowPedidoModal(true)}
+                title={clienteCargado ? `${clientData.nombre} · RUC ${clientData.ruc || '---'}` : 'Cargar cliente'}
+                className={`h-9 max-w-[120px] sm:max-w-[190px] px-2 rounded-xl border flex items-center gap-1.5 transition-all ${
+                  clienteCargado
+                    ? 'bg-[var(--g360-accent)]/10 border-[var(--g360-accent)]/30 hover:bg-[var(--g360-accent)]/20'
+                    : 'bg-[var(--g360-input-bg)] border-dashed border-[var(--g360-border)] hover:border-[var(--g360-accent)]/40'
+                }`}
+              >
+                {clienteCargado ? (
+                  <>
+                    <span className="w-5 h-5 rounded-full bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] text-[8px] font-black flex items-center justify-center shrink-0">{inicialesCliente || 'C'}</span>
+                    <span className="text-[10px] font-black text-[var(--g360-text)] truncate">{clientData.nombre}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-base text-[var(--g360-muted)]">person_add</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-[var(--g360-muted)]">Cliente</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+                  </>
+                )}
+              </button>
             </div>
-            <div className="flex flex-col">
-              <h1 className="text-lg sm:text-2xl font-black font-premium leading-tight tracking-tighter uppercase italic text-[var(--g360-text)]">
-                CIPSA <span className="text-[var(--g360-accent)]">OrderX</span>
-              </h1>
-              <span className="text-[10px] uppercase font-black text-[var(--g360-muted)] tracking-[0.15em] leading-none">
-                Gestión de Pedidos
-              </span>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <StockStatusBadge
+                status={status}
+                lastFetch={lastFetch}
+                error={error}
+                fuente={fuente}
+                onRefresh={performRefresh}
+                refreshing={isRefreshing}
+              />
+              <button onClick={toggleTheme} className="w-9 h-9 rounded-xl bg-[var(--g360-input-bg)] flex items-center justify-center text-[var(--g360-text)] border border-[var(--g360-border)]">
+                <span className="material-symbols-outlined text-xl">
+                  {isDarkMode ? 'light_mode' : 'dark_mode'}
+                </span>
+              </button>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <StockStatusBadge
-              status={status}
-              lastFetch={lastFetch}
-              error={error}
-              fuente={fuente}
-              onRefresh={performRefresh}
-              refreshing={isRefreshing}
-            />
-            <button onClick={toggleTheme} className="w-10 h-10 rounded-xl bg-[var(--g360-input-bg)] flex items-center justify-center text-[var(--g360-text)] border border-[var(--g360-border)]">
-              <span className="material-symbols-outlined text-xl">
-                {isDarkMode ? 'light_mode' : 'dark_mode'}
-              </span>
-            </button>
-          </div>
+          {/* Filas 2-3: búsqueda global con voz + segmentos (solo en /catalogo) */}
+          {enCatalogo && (
+            <div>
+              <div className="relative mt-2">
+                <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--g360-muted)] text-xl pointer-events-none">search</span>
+                <input
+                  type="text"
+                  placeholder="Buscar SKU o nombre..."
+                  className="w-full h-10 bg-[var(--g360-input-bg)] border-2 border-[var(--g360-border)] rounded-xl pl-10 pr-12 text-sm font-bold text-[var(--g360-text)] focus:border-[var(--g360-accent)] outline-none transition-all"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+                {vozSoportada && (
+                  <button
+                    type="button"
+                    onClick={() => (escuchando ? detener() : escuchar())}
+                    title={escuchando ? 'Detener dictado' : 'Buscar por voz'}
+                    aria-label="Buscar por voz"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 flex items-center justify-center rounded-full hover:bg-[var(--g360-surface)] transition-all"
+                  >
+                    <span className={`material-symbols-outlined text-xl ${escuchando ? 'text-red-500 animate-pulse' : 'text-[var(--g360-muted)]'}`}>mic</span>
+                  </button>
+                )}
+              </div>
+              {escuchando && (
+                <p className="mt-1 text-[9px] font-black uppercase tracking-[0.2em] text-red-500 animate-pulse">
+                  ● Escuchando... di el SKU o nombre
+                </p>
+              )}
+
+              {/* Segmentos (líneas de venta) */}
+              <div className="flex gap-1.5 mt-2 overflow-x-auto no-scrollbar pb-0.5">
+                {CATEGORIES.map(cat => {
+                  const activo = activeCatalog === cat.id;
+                  const color = cat.categoria ? CATEGORY_COLORS[cat.categoria] : null;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setActiveCatalog(cat.id)}
+                      style={activo && color ? { backgroundColor: color.primary, color: color.onPrimary } : undefined}
+                      className={`shrink-0 flex items-center gap-1 px-3 h-8 rounded-lg whitespace-nowrap text-[9px] font-black uppercase tracking-widest transition-all ${
+                        activo
+                          ? (color ? 'shadow-md' : 'bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] shadow-md shadow-[var(--g360-accent)]/20')
+                          : 'bg-[var(--g360-input-bg)] text-[var(--g360-muted)] hover:text-[var(--g360-text)]'
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-sm">{cat.icon}</span>
+                      {cat.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </header>
       </div>
 
-      <div className="flex pt-16">
+      <div className={`flex ${enCatalogo ? 'pt-[172px]' : 'pt-24'}`}>
         {/* Desktop Sidebar */}
-        <aside className="hidden lg:flex flex-col w-64 h-[calc(100vh-80px)] sticky top-20 ml-8 bg-[var(--g360-surface)] rounded-[2.5rem] border border-[var(--g360-border)] p-6 gap-6 shadow-xl z-40">
+        <aside className={`hidden lg:flex flex-col w-64 ml-8 bg-[var(--g360-surface)] rounded-[2.5rem] border border-[var(--g360-border)] p-6 gap-6 shadow-xl z-40 ${enCatalogo ? 'sticky top-[180px] h-[calc(100vh-200px)]' : 'sticky top-24 h-[calc(100vh-7rem)]'}`}>
           <div className="flex flex-col gap-2">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--g360-muted)] px-4 mb-2">Navegación</span>
             <NavLink to="/catalogo" className={({isActive}) => `flex items-center gap-3 px-4 py-3 rounded-2xl transition-all ${isActive ? 'bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] shadow-lg shadow-[var(--g360-glow)]' : 'text-[var(--g360-text)] hover:bg-[var(--g360-input-bg)]'}`}>
@@ -278,7 +374,7 @@ function Layout() {
           </div>
         </aside>
 
-        <main className="flex-1 lg:pt-4 pb-16 lg:pb-12 px-4 lg:px-8 max-w-full overflow-hidden">
+        <main className="flex-1 pb-16 lg:pb-12 px-4 lg:px-8 max-w-full overflow-hidden">
           <Outlet />
         </main>
       </div>

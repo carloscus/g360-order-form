@@ -296,11 +296,11 @@ El flujo horario que descargaba `stock_data.json` desde appweb y creaba PRs qued
 ① Cargar Cliente ──► ② Revisar Stock ──► ③ Buscar/Seleccionar ──► ④ 🛒 ──► ⑤ Hoja de Pedido
 ```
 
-**① Cargar Cliente** — Banner "Paso 1" en el catálogo (o botón 🛒 → "Cargar Cliente"). Busca por código, RUC o nombre; al seleccionar se autocompletan nombre, RUC y vendedor.
+**① Cargar Cliente** — Chip del cliente en el header (o botón 🛒 → "Cargar Cliente"); si no hay cliente cargado muestra el prompt "Cargar cliente". Busca por código, RUC o nombre; al seleccionar se autocompletan nombre, RUC y vendedor.
 
 **② Revisar Stock** — Cada tarjeta muestra el semáforo del almacén VES (AGOTADO / BAJO / OK). Toca el nombre del producto para ver stock, cajas disponibles, box y precio.
 
-**③ Buscar/Seleccionar Productos** — Buscador por SKU/nombre/EAN + categorías dinámicas. Configura cantidad con el stepper o "+1 Box".
+**③ Buscar/Seleccionar Productos** — Buscador global en el header (SKU/nombre/EAN, con micrófono) + chips de segmento (Viniball / Vinifan / Representadas). Configura cantidad con el stepper o "+1 Box".
 
 **④ Carrito 🛒** — Botón flotante con contador. El drawer muestra items, cantidades editables y total referencial; incluye el chip del cliente en atención.
 

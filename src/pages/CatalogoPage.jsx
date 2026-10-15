@@ -2,6 +2,8 @@
  * CatalogoPage.jsx
  * E-commerce Moderno - CIPSA Marca Edition
  * Catálogo en vivo desde Stock API (Render): precio base referencial + stock VES real.
+ * La búsqueda y los segmentos (líneas) viven en el header (Layout); esta página
+ * es puro contenido: grid de productos + paginación.
  */
 
 import { useState, useMemo, useEffect } from 'react';
@@ -10,29 +12,12 @@ import { useApp } from '../context/AppContext';
 import { useStockCatalog } from '../hooks/useStockCatalog';
 import { formatMoney } from '../utils/formatters';
 import Paginador from '../components/Paginador';
-import useVoz from '../hooks/useVoz';
-
-// Categorías fijas de venta (decisión de negocio: solo estas 3)
-const CATEGORIES = [
-  { id: 'todos', label: 'Búsqueda', icon: 'search', isFreeSearch: true, ghost: 'Search' },
-  { id: 'viniball', label: 'Viniball', icon: 'sports_baseball', categoria: 'VINIBALL', ghost: 'Viniball' },
-  { id: 'vinifan', label: 'Vinifan', icon: 'school', categoria: 'VINIFAN', ghost: 'Vinifan' },
-  { id: 'representadas', label: 'Representadas', icon: 'stars', categoria: 'REPRESENTADAS', ghost: 'Representadas' },
-];
+import { CATEGORIES, colorDeCategoria } from '../core/categorias';
 
 // Umbral de bajo stock en cajas (regla de negocio de g360-stock-reporter)
 const UMBRAL_BAJO_STOCK = 10;
 
 const PRODUCTS_PER_PAGE = 24;
-
-// Identidad de color por categoría (marca CIPSA). La base de UI es neutra:
-// el color de categoría se aplica solo en chips activos, SKU y contador.
-const CATEGORY_COLORS = {
-  VINIBALL: { primary: '#dc2626', onPrimary: '#ffffff', secondary: '#111827' },      // rojo y negro
-  VINIFAN: { primary: '#ea580c', onPrimary: '#ffffff', secondary: '#1d4ed8' },       // naranja y azul
-  REPRESENTADAS: { primary: '#16a34a', onPrimary: '#ffffff', secondary: '#f8fafc' }, // verde y blanco
-};
-const colorDeCategoria = (cat) => CATEGORY_COLORS[cat]?.primary || null;
 
 // Estado de stock: agotado (0), bajo (<10 cajas VES), ok
 function stockEstado(p) {
@@ -101,21 +86,12 @@ function ProductDetailModal({ product, onClose }) {
 }
 
 function CatalogoPage() {
-  const { addToCart, clientData, setShowPedidoModal } = useApp();
+  const { addToCart, search, activeCatalog, setActiveCatalog } = useApp();
   const { items, status, error, fuente, refresh } = useStockCatalog();
-  const [search, setSearch] = useState('');
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [activeCatalog, setActiveCatalog] = useState('todos');
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuantities, setSearchQuantities] = useState({});
   const [selectedProductDetail, setSelectedProductDetail] = useState(null);
   const debouncedSearch = useDebounce(search, 300);
-
-  const { escuchando, soportado: vozSoportada, escuchar, detener } = useVoz({
-    onTexto: (t) => { setSearch(t); setActiveCatalog('todos'); }
-  });
-
-  const clienteCargado = Boolean(clientData.ruc || clientData.nombre);
 
   // Universo vendible (chips de categoría): sin catálogo ni descontinuados
   const productosVenta = useMemo(() => {
@@ -160,8 +136,9 @@ function CatalogoPage() {
   const pagedItems = filteredProducts.slice((currentPage - 1) * PRODUCTS_PER_PAGE, currentPage * PRODUCTS_PER_PAGE);
   const totalPaginas = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
   const currentCategory = CATEGORIES.find(c => c.id === activeCatalog) || CATEGORIES[0];
-  const currentCatColor = currentCategory.categoria ? CATEGORY_COLORS[currentCategory.categoria] : null;
 
+  // Cambio de segmento o búsqueda → volver a la página 1
+  useEffect(() => { setCurrentPage(1); }, [activeCatalog, debouncedSearch]);
   // Si el filtro reduce los resultados y la página actual queda fuera de rango, volver a la 1
   useEffect(() => {
     if (currentPage > totalPaginas && totalPaginas > 0) setCurrentPage(1);
@@ -174,120 +151,25 @@ function CatalogoPage() {
   const isLoading = status === 'loading' || status === 'idle';
 
   return (
-    <div className={`transition-all duration-500 ${isSearchFocused && !search.trim() ? 'search-focus-active' : ''}`}>
-      {isSearchFocused && <div className="search-overlay" onClick={() => setIsSearchFocused(false)} />}
-
+    <div>
       {/* Aviso: catálogo base (precios pueden estar desactualizados) */}
       {fuente === 'base' && status === 'stale' && (
-        <div className="mx-4 mt-4 mb-2 rounded-2xl bg-amber-500/10 border border-amber-500/40 px-4 py-2.5 flex items-center gap-2.5">
-          <span className="material-symbols-outlined text-amber-500 text-lg shrink-0">warning</span>
-          <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide leading-tight">
-            Catálogo base de respaldo — los precios pueden estar desactualizados. Conectando con el servidor…
+        <div className="mt-1 mb-2 rounded-2xl bg-amber-500/10 border border-amber-500/40 px-4 py-2 flex items-center gap-2.5">
+          <span className="material-symbols-outlined text-amber-500 text-base shrink-0">warning</span>
+          <p className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide leading-tight">
+            Catálogo base de respaldo — precios pueden estar desactualizados. Conectando con el servidor…
           </p>
         </div>
       )}
 
-      {/* Flujo de tienda: Paso 1 - Cliente */}
-      {!clienteCargado ? (
-        <div className="mx-4 mt-4 mb-2 rounded-3xl bg-[var(--g360-surface)] border-2 border-dashed border-[var(--g360-accent)]/40 p-5 flex flex-col sm:flex-row sm:items-center gap-4 sm:justify-between animate-slide-up">
-          <div className="flex items-start gap-3">
-            <div className="w-11 h-11 shrink-0 rounded-2xl bg-[var(--g360-accent)]/10 border border-[var(--g360-accent)]/30 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[var(--g360-accent)]">person_add</span>
-            </div>
-            <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--g360-accent)]">Paso 1 · Cargar cliente</p>
-              <p className="text-sm font-bold text-[var(--g360-text)] mt-0.5">Busca por código, RUC o nombre para empezar el pedido</p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowPedidoModal(true)}
-            className="shrink-0 px-6 py-3 bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-[var(--g360-glow)] hover:scale-105 active:scale-95 transition-all"
-          >
-            Cargar Cliente
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={() => setShowPedidoModal(true)}
-          className="mx-4 mt-4 mb-2 rounded-3xl bg-[var(--g360-accent)]/10 border border-[var(--g360-accent)]/30 px-5 py-3 flex items-center gap-3 text-left w-[calc(100%-2rem)] hover:bg-[var(--g360-accent)]/20 transition-all animate-slide-up"
-        >
-          <span className="material-symbols-outlined text-[var(--g360-accent)] shrink-0">badge</span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[8px] font-black uppercase tracking-widest text-[var(--g360-accent)]">Atendiendo a</p>
-            <p className="text-sm font-bold text-[var(--g360-text)] truncate">{clientData.nombre || '---'} <span className="text-[10px] font-mono text-[var(--g360-muted)]">· RUC {clientData.ruc || '---'}</span></p>
-          </div>
-          <span className="material-symbols-outlined text-[var(--g360-muted)] shrink-0">edit</span>
-        </button>
-      )}
-
-      {/* Dynamic Header */}
-      <div className="relative overflow-hidden pt-4 sm:pt-6 pb-3 sm:pb-4 px-4">
-        <span className="text-ghost opacity-5" style={currentCatColor ? { color: currentCatColor.secondary } : undefined}>{currentCategory.ghost}</span>
-        <div className="relative z-10 text-center sm:text-left">
-          <h2 className="text-2xl sm:text-3xl font-black font-premium uppercase tracking-tighter text-[var(--g360-text)]">
-            {currentCategory.label}
-          </h2>
-          <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] mt-1" style={{ color: currentCatColor?.primary || 'var(--g360-accent)' }}>
-            {filteredProducts.length} PRODUCTOS DISPONIBLES
-          </p>
-        </div>
-      </div>
-
-      {/* Navigation & Search Sticky */}
-      <div className="sticky top-20 z-40 bg-[var(--g360-bg)]/80 backdrop-blur-2xl py-2 sm:py-3 -mx-4 px-4 lg:-mx-8 lg:px-8 border-b border-[var(--g360-border)] search-container rounded-b-[2.5rem]">
-         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-3 mb-3 sm:pb-4 sm:mb-4">
-            {CATEGORIES.map(cat => {
-              const activo = activeCatalog === cat.id;
-              const color = cat.categoria ? CATEGORY_COLORS[cat.categoria] : null;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => { setActiveCatalog(cat.id); setCurrentPage(1); }}
-                  style={activo && color ? { backgroundColor: color.primary, color: color.onPrimary } : undefined}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl whitespace-nowrap text-[9px] font-black uppercase tracking-widest transition-all lg:px-6 lg:py-3 lg:text-[10px] lg:gap-2 lg:rounded-2xl ${
-                    activo
-                      ? (color ? 'shadow-xl' : 'bg-[var(--g360-accent)] text-[var(--g360-accent-contrast)] shadow-xl shadow-[var(--g360-accent)]/20')
-                      : 'bg-[var(--g360-surface)] text-[var(--g360-muted)] border border-[var(--g360-border)]'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-base lg:text-lg">{cat.icon}</span>
-                  {cat.label}
-                </button>
-              );
-            })}
-         </div>
-
-         <div className="relative group">
-            <span className="material-symbols-outlined absolute left-5 top-1/2 -translate-y-1/2 text-[var(--g360-muted)] group-focus-within:text-[var(--g360-accent)] text-2xl transition-colors">search</span>
-            <input
-              type="text"
-              placeholder="Buscar SKU o nombre..."
-              className="w-full bg-[var(--g360-input-bg)] border-2 border-[var(--g360-border)] rounded-[1.5rem] py-4 pl-14 pr-14 text-sm font-bold text-[var(--g360-text)] focus:border-[var(--g360-accent)] outline-none transition-all"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              onFocus={() => { setIsSearchFocused(true); setActiveCatalog('todos'); }}
-            />
-            {vozSoportada && (
-              <button
-                type="button"
-                onClick={() => (escuchando ? detener() : escuchar())}
-                title={escuchando ? 'Detener dictado' : 'Buscar por voz'}
-                aria-label="Buscar por voz"
-                className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full hover:bg-[var(--g360-surface)] transition-all"
-              >
-                <span className={`material-symbols-outlined text-2xl ${escuchando ? 'text-red-500 animate-pulse' : 'text-[var(--g360-muted)]'}`}>mic</span>
-              </button>
-            )}
-            {escuchando && (
-              <p className="absolute left-14 -bottom-5 text-[9px] font-black uppercase tracking-[0.2em] text-red-500 animate-pulse pointer-events-none">
-                ● Escuchando... di el SKU o nombre
-              </p>
-            )}
-         </div>
-      </div>
+      {/* Contador de resultados (caption; el título vive en el chip activo del header) */}
+      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[var(--g360-muted)] mb-2 mt-1">
+        {filteredProducts.length} productos
+        {currentCategory.id !== 'todos' ? ` · ${currentCategory.label}` : ''}
+      </p>
 
       {/* Product Grid */}
-      <div className="py-3 sm:py-4 grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 lg:gap-6 relative z-10">
+      <div className="pb-3 grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 lg:gap-6">
         {isLoading ? (
           Array(8).fill(0).map((_, i) => (
             <div key={i} className="h-56 bg-[var(--g360-surface)] rounded-[2rem] animate-pulse" />
