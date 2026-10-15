@@ -23,8 +23,9 @@ const HEALTH_URL = STOCK_API_URL.replace(/\/stock$/, '/health');
 
 const SESSION_KEY = 'g360_tienda_catalog_v1';
 const LOCAL_KEY = 'g360_tienda_catalog_local_v1';
-const TTL_SESSION_MS = 5 * 60 * 1000;        // 5 min
-const TTL_LOCAL_MS = 7 * 24 * 60 * 60 * 1000; // 7 días
+const TTL_SESSION_MS = 5 * 60 * 1000;   // 5 min (datos "frescos" en la sesión)
+// localStorage NO expira: es el respaldo offline. Siempre se hidrata si existe,
+// se marca como 'stale' y el badge muestra la edad de los datos.
 const PROBE_INTERVAL_MS = 10 * 60 * 1000;     // 10 min
 const KEEPALIVE_INTERVAL_MS = 5 * 60 * 1000;  // 5 min
 const TIMEOUT_FULL_MS = 25000;
@@ -112,13 +113,27 @@ function persistCache(payload) {
   } catch (e) { /* quota */ }
 }
 
-function readCache(key, ttlMs) {
+// Cache de sesión: datos "frescos" por 5 minutos
+function readSession() {
   try {
-    const raw = (key === SESSION_KEY ? sessionStorage : localStorage).getItem(key);
+    const raw = sessionStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const record = JSON.parse(raw);
     if (!record?.items?.length) return null;
-    if (Date.now() - record.savedAt > ttlMs) return null;
+    if (Date.now() - record.savedAt > TTL_SESSION_MS) return null;
+    return record;
+  } catch (e) {
+    return null;
+  }
+}
+
+// Respaldo offline: sin expiración. Aunque tenga semanas, sirve para procesar pedidos.
+function readLocal() {
+  try {
+    const raw = localStorage.getItem(LOCAL_KEY);
+    if (!raw) return null;
+    const record = JSON.parse(raw);
+    if (!record?.items?.length) return null;
     return record;
   } catch (e) {
     return null;
@@ -189,6 +204,11 @@ async function fullFetch({ silent = false } = {}) {
  */
 async function probeFreshness() {
   if (!enVentanaOperativa()) return;
+  // Sin datos (primer arranque fallido): reintentar carga completa
+  if (state.items.length === 0) {
+    fullFetch({ silent: false });
+    return;
+  }
   try {
     const response = await fetchWithTimeout(`${STOCK_API_URL}?limit=1`, TIMEOUT_PROBE_MS);
     if (!response.ok) return;
@@ -216,6 +236,16 @@ function startBackground() {
       probeFreshness();
     }
   });
+  // Offline-first: al volver la conexión, refrescar de inmediato
+  window.addEventListener('online', () => {
+    setState({ status: state.items.length ? 'stale' : 'loading', error: null });
+    fullFetch({ silent: false });
+  });
+  window.addEventListener('offline', () => {
+    if (state.items.length) {
+      setState({ error: 'Sin conexión: trabajando con datos en cache' });
+    }
+  });
 }
 
 /**
@@ -224,13 +254,14 @@ function startBackground() {
  */
 export function ensureLoaded() {
   startBackground();
-  const session = readCache(SESSION_KEY, TTL_SESSION_MS);
+  const session = readSession();
   if (session) {
     applyCache(session, 'fresh');
     return Promise.resolve(state);
   }
-  const local = readCache(LOCAL_KEY, TTL_LOCAL_MS);
+  const local = readLocal();
   if (local) {
+    // Hidrata siempre (sin importar la edad): offline = datos para procesar
     applyCache(local, 'stale');
     fullFetch({ silent: true });
     return Promise.resolve(state);
