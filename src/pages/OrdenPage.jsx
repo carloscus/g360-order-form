@@ -112,7 +112,14 @@ function OrdenPage() {
     <>
       {/* Panel Flotante Abstraído como G360 Component */}
       {cartCount > 0 && !showExportConfirm && !showClearConfirm && (
-        <G360DragModal className="flex items-center gap-4 bg-[var(--g360-surface)]/10 backdrop-blur-xl p-4 rounded-3xl border-[0.5px] border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] transition-[box-shadow_transform_background-color] duration-200">
+        <G360DragModal
+          isOpen={true}
+          showBackdrop={false}
+          modalWidth={215}
+          modalHeight={76}
+          zIndex={550}
+          className="flex items-center gap-4 bg-[var(--g360-surface)]/10 backdrop-blur-xl p-4 rounded-3xl border-[0.5px] border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] transition-[box-shadow_transform_background-color] duration-200"
+        >
           <button onClick={(e) => { e.stopPropagation(); setShowExportConfirm(false); setShowClearConfirm(true); }} className="w-12 h-12 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center hover:bg-red-500 hover:text-white transition-all border border-red-500/20 hover:border-red-500"><span className="material-symbols-outlined text-2xl">delete_sweep</span></button>
           <button onClick={(e) => { e.stopPropagation(); handleExport(); }} className="h-12 px-5 bg-[var(--g360-accent)] text-black rounded-full font-black text-[10px] uppercase tracking-[0.2em] shadow-xl shadow-[var(--g360-accent)]/30 flex items-center gap-2 hover:bg-[var(--g360-accent)] hover:scale-105 transition-[transform_background-color] border border-[var(--g360-accent)]"><span className="material-symbols-outlined text-lg">share</span>ENVIAR</button>
         </G360DragModal>
@@ -145,6 +152,15 @@ function OrdenPage() {
               <span className="text-lg font-black">{cartTotalUnits}</span>
             </div>
           </div>
+
+          {/* CTA principal: exportar hoja de pedido */}
+          <button
+            onClick={handleExport}
+            className="mt-5 w-full py-4 bg-[var(--g360-accent)] text-black rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-xl shadow-[var(--g360-glow)] flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all"
+          >
+            <span className="material-symbols-outlined text-lg">download</span>
+            Exportar Hoja de Pedido
+          </button>
         </div>
       </div>
 
